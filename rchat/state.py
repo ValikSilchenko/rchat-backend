@@ -1,15 +1,18 @@
 from asyncpg import create_pool
 
+from rchat.conf import DATABASE_DSN
 from rchat.repository.session import SessionRepository
 from rchat.repository.user import UserRepository
 
 
 class AppState:
     def __init__(self):
-        pass
+        self._db = None
+        self._user_repo = None
+        self._session_repo = None
 
     async def startup(self):
-        self._db = await create_pool(dsn="postgresql://postgres:postgres@localhost:1946/postgres")
+        self._db = await create_pool(dsn=DATABASE_DSN)
 
         self._user_repo = UserRepository(db=self._db)
         self._session_repo = SessionRepository(db=self._db)

@@ -1,10 +1,11 @@
+import uuid
+
 from asyncpg import Pool
-from pydantic import BaseModel, UUID3, UUID5
-from secrets import token_urlsafe
+from pydantic import BaseModel, UUID5, UUID4
 
 
 class SessionCreate(BaseModel):
-    id: str
+    id: UUID4
     user_id: UUID5
     ip: str | None = None
     user_agent: str | None = None
@@ -16,9 +17,9 @@ class SessionRepository:
     def __init__(self, db: Pool):
         self._db = db
 
-    async def create(self, user_id: UUID3, ip: str | None = None, user_agent: str | None = None):
+    async def create(self, user_id: UUID5, ip: str | None = None, user_agent: str | None = None):
         session_data = SessionCreate(
-            id=token_urlsafe(32),
+            id=uuid.uuid4(),
             user_id=user_id,
             ip=ip,
             user_agent=user_agent,
