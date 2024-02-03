@@ -17,18 +17,25 @@ class SessionRepository:
     def __init__(self, db: Pool):
         self._db = db
 
-    async def create(self, user_id: UUID5, ip: str | None = None, user_agent: str | None = None):
+    async def create(
+        self,
+        user_id: UUID5,
+        ip: str | None = None,
+        user_agent: str | None = None,
+    ):
         session_data = SessionCreate(
             id=uuid.uuid4(),
             user_id=user_id,
             ip=ip,
             user_agent=user_agent,
             country=None,
-            is_active=True
+            is_active=True,
         )
         model_dump = session_data.model_dump()
         field_names = ", ".join(model_dump.keys())
-        placeholders = ", ".join([f"${i}" for i in range(1, len(model_dump) + 1)])
+        placeholders = ", ".join(
+            [f"${i}" for i in range(1, len(model_dump) + 1)]
+        )
         sql = f"""
             insert into "session" ({field_names})
             values ({placeholders})

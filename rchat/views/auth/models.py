@@ -35,7 +35,10 @@ class AuthResponse(BaseModel):
 class CreateUserData(BaseModel):
     public_id: str = Field(min_length=3)
     password: str = Field(min_length=7)
-    email: str = Field(pattern=(r"([A-Za-z0-9]+[.-_])"
-                                r"*[A-Za-z0-9]+@[A-Za-z0-9-]"
-                                r"+(\.[A-Z|a-z]{2,})+")
-                       )
+    email: str = Field(
+        pattern=(
+            r"([A-Za-z0-9]+[.-_])"
+            r"*[A-Za-z0-9]+@[A-Za-z0-9-]"
+            r"+(\.[A-Z|a-z]{2,})+"
+        )
+    )

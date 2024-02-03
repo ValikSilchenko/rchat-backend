@@ -46,8 +46,9 @@ class UserRepository:
             string=(password + user_salt).encode()
         ).hexdigest()
         sql = """
-            insert into "user" ("id", "public_id", "password", "email", "user_salt") 
-            values ($1, $2, $3, $4, $5)
+            insert into "user" (
+                "id", "public_id", "password", "email", "user_salt"
+            ) values ($1, $2, $3, $4, $5)
             on conflict do nothing
             returning *
         """
@@ -60,4 +61,3 @@ class UserRepository:
             return
 
         return User(**dict(row))
-

@@ -20,9 +20,9 @@ async def test():
 
 @router.post("/api/auth")
 async def auth(
-        body: AuthBody,
-        user_agent: str | None = Header(default=None),
-        x_forwarded_for: str | None = Header(default=None),
+    body: AuthBody,
+    user_agent: str | None = Header(default=None),
+    x_forwarded_for: str | None = Header(default=None),
 ):
     user = await app_state.user_repo.get_by_email(email=body.email)
     if not user:
@@ -38,7 +38,9 @@ async def auth(
         user_id=user.id, ip=x_forwarded_for, user_agent=user_agent
     )
 
-    return AuthResponse(token=create_token(session))
+    return AuthResponse(
+        token=create_token(session - session, user_public_id=user.public_id)
+    )
 
 
 @router.post("/user/create")
@@ -46,15 +48,19 @@ async def create_user(auth_data: CreateUserData):
     user = await app_state.user_repo.create(
         public_id=auth_data.public_id,
         password=auth_data.password,
-        email=auth_data.email
+        email=auth_data.email,
     )
     if not user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="user_already_exists")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="user_already_exists",
+        )
 
     headers = {"Location": f"{BASE_BACKEND_URL}/api/auth"}
     return Response(
-        content=str({"email": auth_data.public_id, "password": auth_data.password}),
+        content=str(
+            {"email": auth_data.public_id, "password": auth_data.password}
+        ),
         status_code=status.HTTP_307_TEMPORARY_REDIRECT,
-        headers=headers
+        headers=headers,
     )
-
