@@ -39,7 +39,7 @@ async def auth(
     )
 
     return AuthResponse(
-        token=create_token(session - session, user_public_id=user.public_id)
+        token=create_token(session, user_public_id=user.public_id)
     )
 
 
