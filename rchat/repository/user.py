@@ -38,6 +38,19 @@ class UserRepository:
 
         return User(**dict(row))
 
+    async def get_by_public_id(self, public_id: str) -> User | None:
+        sql = """
+            select * from "user"
+            where "public_id" = $1
+        """
+        async with self._db.acquire() as c:
+            row = await c.fetchrow(sql, public_id)
+
+        if not row:
+            return
+
+        return User(**dict(row))
+
     async def create(self, public_id: str, password: str, email: str):
         user_id = uuid.uuid5(uuid.NAMESPACE_DNS, public_id)
         user_salt = token_hex(16)
