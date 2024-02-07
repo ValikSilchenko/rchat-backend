@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import StrEnum
 
 from sqlmodel import SQLModel
 from pydantic import BaseModel, UUID5, Field, UUID4
@@ -23,8 +24,13 @@ class User(SQLModel):
     created_timestamp: datetime
 
 
+class LoginTypeEnum(StrEnum):
+    email = "email"
+    public_id = "public_id"
+
+
 class AuthBody(BaseModel):
-    email: str
+    login: str
     password: str
 
 
@@ -32,13 +38,16 @@ class AuthResponse(BaseModel):
     token: str
 
 
-class CreateUserData(BaseModel):
-    public_id: str = Field(min_length=3)
-    password: str = Field(min_length=7)
-    email: str = Field(
-        pattern=(
+class UserDataPatternEnum(StrEnum):
+    public_id = "@[A-Za-z_]+[A-Za-z0-9_.]*"
+    email = (
             r"([A-Za-z0-9]+[.-_])"
             r"*[A-Za-z0-9]+@[A-Za-z0-9-]"
             r"+(\.[A-Z|a-z]{2,})+"
         )
-    )
+
+
+class CreateUserData(BaseModel):
+    public_id: str = Field(min_length=3, pattern=UserDataPatternEnum.public_id)
+    password: str = Field(min_length=7)
+    email: str = Field(pattern=UserDataPatternEnum.email)
