@@ -1,3 +1,4 @@
+import logging
 import secrets
 from hashlib import sha256
 
@@ -7,8 +8,10 @@ from starlette.responses import Response
 
 from rchat.conf import BASE_BACKEND_URL
 from rchat.state import app_state
-from rchat.views.auth.helpers import create_token
-from rchat.views.auth.models import AuthBody, AuthResponse, CreateUserData
+from rchat.views.auth.helpers import create_token, get_login_type
+from rchat.views.auth.models import AuthBody, AuthResponse, CreateUserData, LoginTypeEnum
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -24,10 +27,18 @@ async def auth(
     user_agent: str | None = Header(default=None),
     x_forwarded_for: str | None = Header(default=None),
 ):
-    user = await app_state.user_repo.get_by_email(email=body.email)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    login_type = get_login_type(login=body.login)
 
+    match login_type:
+        case LoginTypeEnum.email:
+            user = await app_state.user_repo.get_by_email(email=body.login)
+        case LoginTypeEnum.public_id:
+            user = await app_state.user_repo.get_by_public_id(public_id=body.login)
+        case _:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     encrypted_password = sha256(
         string=(body.password + user.user_salt).encode()
     ).hexdigest()
@@ -44,23 +55,14 @@ async def auth(
 
 
 @router.post("/user/create")
-async def create_user(auth_data: CreateUserData):
+async def create_user(user_data: CreateUserData):
     user = await app_state.user_repo.create(
-        public_id=auth_data.public_id,
-        password=auth_data.password,
-        email=auth_data.email,
+        public_id=user_data.public_id,
+        password=user_data.password,
+        email=user_data.email,
     )
     if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="user_already_exists",
         )
-
-    headers = {"Location": f"{BASE_BACKEND_URL}/api/auth"}
-    return Response(
-        content=str(
-            {"email": auth_data.public_id, "password": auth_data.password}
-        ),
-        status_code=status.HTTP_307_TEMPORARY_REDIRECT,
-        headers=headers,
-    )
