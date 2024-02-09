@@ -1,16 +1,11 @@
 import uuid
 
 from asyncpg import Pool
-from pydantic import BaseModel, UUID5, UUID4
+from pydantic import UUID5
+from datetime import datetime, timedelta
 
-
-class SessionCreate(BaseModel):
-    id: UUID4
-    user_id: UUID5
-    ip: str | None = None
-    user_agent: str | None = None
-    country: str | None = None
-    is_active: bool
+from rchat.conf import SESSION_LIFETIME_MIN
+from rchat.views.auth.models import Session
 
 
 class SessionRepository:
@@ -22,16 +17,20 @@ class SessionRepository:
         user_id: UUID5,
         ip: str | None = None,
         user_agent: str | None = None,
-    ):
-        session_data = SessionCreate(
+    ) -> Session:
+        session_data = Session(
             id=uuid.uuid4(),
             user_id=user_id,
             ip=ip,
             user_agent=user_agent,
             country=None,
             is_active=True,
+            expired_at=datetime.now()
+            + timedelta(minutes=SESSION_LIFETIME_MIN),
+            refresh_id=uuid.uuid4(),
+            created_timestamp=None,
         )
-        model_dump = session_data.model_dump()
+        model_dump = session_data.model_dump(exclude_none=True)
         field_names = ", ".join(model_dump.keys())
         placeholders = ", ".join(
             [f"${i}" for i in range(1, len(model_dump) + 1)]

@@ -9,10 +9,12 @@ class Session(SQLModel):
     id: UUID4
     user_id: UUID5
     ip: str | None = None
+    country: str | None
     user_agent: str | None = None
     is_active: bool
-    country: str | None
-    created_timestamp: datetime
+    expired_at: datetime
+    refresh_id: UUID4
+    created_timestamp: datetime | None
 
 
 class User(SQLModel):
@@ -35,19 +37,20 @@ class AuthBody(BaseModel):
 
 
 class AuthResponse(BaseModel):
-    token: str
+    access_token: str
+    refresh_token: str
 
 
 class UserDataPatternEnum(StrEnum):
     public_id = "@[A-Za-z_]+[A-Za-z0-9_.]*"
     email = (
-            r"([A-Za-z0-9]+[.-_])"
-            r"*[A-Za-z0-9]+@[A-Za-z0-9-]"
-            r"+(\.[A-Z|a-z]{2,})+"
-        )
+        r"([A-Za-z0-9]+[.-_])"
+        r"*[A-Za-z0-9]+@[A-Za-z0-9-]"
+        r"+(\.[A-Z|a-z]{2,})+"
+    )
 
 
 class CreateUserData(BaseModel):
-    public_id: str = Field(min_length=3, pattern=UserDataPatternEnum.public_id)
+    public_id: str = Field(min_length=4, pattern=UserDataPatternEnum.public_id)
     password: str = Field(min_length=7)
     email: str = Field(pattern=UserDataPatternEnum.email)
