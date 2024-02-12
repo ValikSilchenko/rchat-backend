@@ -17,6 +17,7 @@ logging.basicConfig(level=logging.INFO)
 @app.on_event("startup")
 async def startup():
     await app_state.startup()
+    await app_state.init_migrations()
 
 
 @app.on_event("shutdown")
