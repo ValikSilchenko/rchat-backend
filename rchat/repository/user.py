@@ -1,9 +1,9 @@
 import uuid
+from hashlib import sha256
+from secrets import token_hex
 
 from asyncpg import Pool
 from pydantic import UUID3
-from secrets import token_hex
-from hashlib import sha256
 
 from rchat.views.auth.models import User
 

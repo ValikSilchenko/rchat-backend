@@ -1,7 +1,7 @@
+import logging
+
 from starlette.requests import Request
 from starlette.responses import Response
-
-import logging
 
 logger = logging.getLogger(__name__)
 

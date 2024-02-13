@@ -3,7 +3,7 @@ import re
 from jose import jwt
 
 from rchat.conf import SECRET_KEY
-from rchat.views.auth.models import Session, LoginTypeEnum, UserDataPatternEnum
+from rchat.views.auth.models import LoginTypeEnum, Session, UserDataPatternEnum
 
 
 def get_login_type(login: str) -> LoginTypeEnum | None:

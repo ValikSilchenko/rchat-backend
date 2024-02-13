@@ -9,7 +9,5 @@ def setup_logging():
         level=logging.INFO,
         datefmt="%Y-%m-%d %H:%M:%S",
         style="{",
-        format=(
-            "{asctime} [{levelname}] [{name}] {message}"
-        ),
+        format=("{asctime} [{levelname}] [{name}] {message}"),
     )

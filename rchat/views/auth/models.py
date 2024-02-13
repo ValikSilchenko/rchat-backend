@@ -1,8 +1,8 @@
 from datetime import datetime
 from enum import StrEnum
 
+from pydantic import UUID4, UUID5, BaseModel, Field
 from sqlmodel import SQLModel
-from pydantic import BaseModel, UUID5, Field, UUID4
 
 
 class Session(SQLModel):

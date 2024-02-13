@@ -1,16 +1,13 @@
 import asyncio
 from logging.config import fileConfig
 
+from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
-
-from alembic import context
 from sqlmodel import SQLModel
 
-from rchat.views.auth.models import User, Session
 from rchat.conf import MIGRATIONS_DATABASE_DSN
-
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

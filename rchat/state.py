@@ -1,11 +1,10 @@
 from asyncpg import create_pool
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import SQLModel
 
 from rchat.conf import DATABASE_DSN, MIGRATIONS_DATABASE_DSN
 from rchat.repository.session import SessionRepository
 from rchat.repository.user import UserRepository
-
-from sqlalchemy.ext.asyncio import create_async_engine
 
 
 class AppState:

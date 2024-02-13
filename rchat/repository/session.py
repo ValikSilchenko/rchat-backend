@@ -1,8 +1,8 @@
 import uuid
+from datetime import datetime, timedelta
 
 from asyncpg import Pool
 from pydantic import UUID5
-from datetime import datetime, timedelta
 
 from rchat.conf import SESSION_LIFETIME_MIN
 from rchat.views.auth.models import Session
