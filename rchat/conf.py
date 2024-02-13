@@ -1,7 +1,16 @@
-SECRET_KEY = "10d4f2d93aed29b7be09a2bb0fe1109ede2a602505935063e3b423c272673eacf027d4bc329"
-BASE_BACKEND_URL = "http://26.20.186.152:8080"
-DATABASE_DSN = "postgresql://postgres:postgres@postgres/postgres"
+import os
+
+
+SECRET_KEY = os.environ.get("RCHAT_SECRET_KEY")
+BASE_BACKEND_URL = os.environ.get("RCHAT_BASE_BACKEND_URL")
+
+DB_USERNAME = os.environ.get("RCHAT_DB_USERNAME")
+DB_PASSWORD = os.environ.get("RCHAT_DB_PASSWORD")
+DB_NAME = os.environ.get("RCHAT_DB_NAME")
+DB_HOST = os.environ.get("RCHAT_DB_HOST")
+
+DATABASE_DSN = f"postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
 MIGRATIONS_DATABASE_DSN = (
-    "postgresql+asyncpg://postgres:postgres@postgres/postgres"
+    f"postgresql+asyncpg://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
 )
-SESSION_LIFETIME_MIN = 120
+SESSION_LIFETIME_MIN = os.environ.get("RCHAT_SESSION_LIFETIME_MIN")
