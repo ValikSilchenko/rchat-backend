@@ -43,7 +43,7 @@ async def auth(
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     if not user:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     encrypted_password = sha256(
         string=(body.password + user.user_salt).encode()
     ).hexdigest()
