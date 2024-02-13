@@ -17,7 +17,9 @@ class AppState:
 
     async def startup(self):
         self._db = await create_pool(dsn=DATABASE_DSN)
-        self._engine = create_async_engine(MIGRATIONS_DATABASE_DSN, echo=True, future=True)
+        self._engine = create_async_engine(
+            MIGRATIONS_DATABASE_DSN, echo=True, future=True
+        )
 
         self._user_repo = UserRepository(db=self._db)
         self._session_repo = SessionRepository(db=self._db)

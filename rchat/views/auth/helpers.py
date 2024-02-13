@@ -20,7 +20,11 @@ def generate_tokens(session: Session, user_public_id: str) -> dict[str, str]:
     :param user_public_id: public_id пользователя
     :return: Словарь вида {access_token: ..., refresh_token: ...}
     """
-    access_payload = {"session": session.id.hex, "public_id": user_public_id}
+    access_payload = {
+        "session": session.id.hex,
+        "public_id": user_public_id,
+        "exp": session.expired_at,
+    }
     refresh_payload = {"refresh_id": session.refresh_id.hex}
 
     return {
