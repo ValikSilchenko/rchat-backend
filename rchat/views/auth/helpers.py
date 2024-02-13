@@ -1,6 +1,6 @@
 import re
 
-from jwt import encode
+from jose import jwt
 
 from rchat.conf import SECRET_KEY
 from rchat.views.auth.models import Session, LoginTypeEnum, UserDataPatternEnum
@@ -24,6 +24,6 @@ def generate_tokens(session: Session, user_public_id: str) -> dict[str, str]:
     refresh_payload = {"refresh_id": session.refresh_id.hex}
 
     return {
-        "access_token": encode(payload=access_payload, key=SECRET_KEY),
-        "refresh_token": encode(payload=refresh_payload, key=SECRET_KEY),
+        "access_token": jwt.encode(claims=access_payload, key=SECRET_KEY),
+        "refresh_token": jwt.encode(claims=refresh_payload, key=SECRET_KEY),
     }
