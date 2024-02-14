@@ -1,5 +1,4 @@
 import logging
-import secrets
 from hashlib import sha256
 
 from fastapi import APIRouter, Header, HTTPException
