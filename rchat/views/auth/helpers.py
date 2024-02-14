@@ -9,6 +9,12 @@ from rchat.views.auth.models import LoginTypeEnum, Session, UserDataPatternEnum
 
 
 def get_login_type(login: str) -> LoginTypeEnum | None:
+    """
+    Возвращает тип логина для переданной строки.
+    :param login: строка, используемая как логин пользователя
+    :return: тип логина (email или public_id)
+    или None при несоответствии одному из форматов
+    """
     try:
         validate_email(login)
         # в случае несовпадения паттерну вызывает исключение

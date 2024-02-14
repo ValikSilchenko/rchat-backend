@@ -1,9 +1,9 @@
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import UUID4, UUID5, BaseModel, Field, EmailStr, field_validator
+from email_validator import validate_email
+from pydantic import UUID4, UUID5, BaseModel, EmailStr, Field, field_validator
 from sqlmodel import SQLModel
-from email_validator import validate_email, EmailSyntaxError, EmailUndeliverableError
 
 
 class Session(SQLModel):

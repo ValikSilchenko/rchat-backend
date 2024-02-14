@@ -19,17 +19,19 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/test")
-async def test():
-    secrets.token_hex(32)
-
-
 @router.post("/api/auth")
 async def auth(
     body: AuthBody,
     user_agent: str | None = Header(default=None),
     x_forwarded_for: str | None = Header(default=None),
 ):
+    """
+    Метод аутентификации пользователя.
+    :param body: данные для аутентификации
+    :param user_agent:
+    :param x_forwarded_for:
+    :return: токены доступа и обновления (access_token и refresh_token)
+    """
     login_type = get_login_type(login=body.login)
 
     match login_type:
@@ -60,6 +62,10 @@ async def auth(
 
 @router.post("/user/create")
 async def create_user(user_data: CreateUserData):
+    """
+    Метод создания пользователя в базе.
+    :param user_data: данные для регистрации пользователя
+    """
     user = await app_state.user_repo.create(
         public_id=user_data.public_id,
         password=user_data.password,
