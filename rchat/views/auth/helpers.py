@@ -1,14 +1,21 @@
 import re
 
 from jose import jwt
+from pydantic import validate_email
+from pydantic_core import PydanticCustomError
 
 from rchat.conf import SECRET_KEY
 from rchat.views.auth.models import LoginTypeEnum, Session, UserDataPatternEnum
 
 
 def get_login_type(login: str) -> LoginTypeEnum | None:
-    if re.match(UserDataPatternEnum.email, login):
+    try:
+        validate_email(login)
+        # в случае несовпадения паттерну вызывает исключение
         return LoginTypeEnum.email
+    except PydanticCustomError:
+        pass
+
     if re.match(UserDataPatternEnum.public_id, login):
         return LoginTypeEnum.public_id
 
