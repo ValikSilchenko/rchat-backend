@@ -1,8 +1,9 @@
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import UUID4, UUID5, BaseModel, Field
+from pydantic import UUID4, UUID5, BaseModel, Field, EmailStr, field_validator
 from sqlmodel import SQLModel
+from email_validator import validate_email, EmailSyntaxError, EmailUndeliverableError
 
 
 class Session(SQLModel):
@@ -21,7 +22,7 @@ class User(SQLModel):
     id: UUID5
     public_id: str
     password: str
-    email: str
+    email: EmailStr
     user_salt: str
     created_timestamp: datetime
 
@@ -43,14 +44,14 @@ class AuthResponse(BaseModel):
 
 class UserDataPatternEnum(StrEnum):
     public_id = "@[A-Za-z_]+[A-Za-z0-9_.]*"
-    email = (
-        r"([A-Za-z0-9]+[.-_])"
-        r"*[A-Za-z0-9]+@[A-Za-z0-9-]"
-        r"+(\.[A-Z|a-z]{2,})+"
-    )
 
 
 class CreateUserData(BaseModel):
     public_id: str = Field(min_length=4, pattern=UserDataPatternEnum.public_id)
     password: str = Field(min_length=7)
-    email: str = Field(pattern=UserDataPatternEnum.email)
+    email: EmailStr
+
+    @field_validator("email", mode="before")
+    def validate_email(cls, email_str: EmailStr):
+        validate_email(email_str, check_deliverability=True)
+        return email_str
