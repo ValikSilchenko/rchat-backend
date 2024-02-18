@@ -7,6 +7,7 @@ from rchat.log import setup_logging
 from rchat.middlewares import access_log_middleware
 from rchat.state import app_state
 from rchat.views.auth.views import router as auth_router
+from rchat.views.user.views import router as user_router
 
 
 @asynccontextmanager
@@ -20,6 +21,7 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(auth_router)
+app.include_router(user_router)
 
 app.middleware("http")(access_log_middleware)
 

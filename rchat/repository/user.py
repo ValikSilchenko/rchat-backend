@@ -4,9 +4,14 @@ from secrets import token_hex
 from typing import Optional
 
 from asyncpg import Pool
-from pydantic import UUID3
+from pydantic import UUID3, BaseModel, UUID4
 
 from rchat.views.auth.models import User
+
+
+class UserFind(BaseModel):
+    public_id: str
+    avatar_url: str | None = None
 
 
 class UserRepository:
@@ -94,3 +99,38 @@ class UserRepository:
             return
 
         return User(**dict(row))
+
+    async def find_users_by_public_id(
+            self, match_str: str, except_user_id: UUID4 | None = None
+    ) -> list[UserFind]:
+        """
+        Возвращает пользователей, подходящих под поисковую строку.
+        Пользователи возвращаются в порядке наибольшего совпадения.
+        :param match_str: поисковая строка
+        :param except_user_id: id пользователя,
+         которого нужно исключить из результатов поиска,
+         позволяет исключить поиск самого себя в том числе
+        :return: список найденных пользователей,
+         для каждого пользователя возвращается его public_id и аватар
+        """
+        sql = f"""
+            select "public_id" from "user"
+            where "public_id" like '@%' || $1 || '%'
+            and {'"id" <> $2' if except_user_id else True} 
+            order by
+            case
+                when "public_id" like '@' || $1 then 1
+                when "public_id" like '@' || $1 || '%' then 2
+                when "public_id" like '@%' || $1 then 4
+                else 3
+            end
+        """
+        if except_user_id:
+            params = [match_str, except_user_id]
+        else:
+            params = [match_str]
+
+        async with self._db.acquire() as c:
+            rows = await c.fetch(sql, *params)
+
+        return [UserFind(**dict(row)) for row in rows]

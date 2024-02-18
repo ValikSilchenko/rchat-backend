@@ -44,3 +44,7 @@ def generate_tokens(session: Session, user_public_id: str) -> dict[str, str]:
         "access_token": jwt.encode(claims=access_payload, key=SECRET_KEY),
         "refresh_token": jwt.encode(claims=refresh_payload, key=SECRET_KEY),
     }
+
+
+def check_access_token() -> Session:
+    pass
