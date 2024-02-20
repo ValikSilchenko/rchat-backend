@@ -1,30 +1,7 @@
-from datetime import datetime
 from enum import StrEnum
 
 from email_validator import validate_email
-from pydantic import UUID4, UUID5, BaseModel, EmailStr, Field, field_validator
-from sqlmodel import SQLModel
-
-
-class Session(SQLModel):
-    id: UUID4
-    user_id: UUID5
-    ip: str | None = None
-    country: str | None
-    user_agent: str | None = None
-    is_active: bool
-    expired_at: datetime
-    refresh_id: UUID4
-    created_timestamp: datetime | None
-
-
-class User(SQLModel):
-    id: UUID5
-    public_id: str
-    password: str
-    email: EmailStr
-    user_salt: str
-    created_timestamp: datetime
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class LoginTypeEnum(StrEnum):

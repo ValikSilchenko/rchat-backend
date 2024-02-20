@@ -5,7 +5,8 @@ from pydantic import validate_email
 from pydantic_core import PydanticCustomError
 
 from rchat.conf import SECRET_KEY
-from rchat.views.auth.models import LoginTypeEnum, Session, UserDataPatternEnum
+from rchat.views.auth.models import LoginTypeEnum, UserDataPatternEnum
+from rchat.schemas.models import Session
 
 
 def get_login_type(login: str) -> LoginTypeEnum | None:

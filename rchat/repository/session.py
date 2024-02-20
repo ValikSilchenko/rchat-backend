@@ -5,7 +5,7 @@ from asyncpg import Pool
 from pydantic import UUID5
 
 from rchat.conf import SESSION_LIFETIME_MIN
-from rchat.views.auth.models import Session
+from rchat.schemas.models import Session
 
 
 class SessionRepository:
