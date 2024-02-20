@@ -14,6 +14,7 @@ from rchat.views.user.views import router as user_router
 async def lifespan(_app: FastAPI):
     await app_state.startup()
     setup_logging()
+    await app_state.init_migrations()
     yield
     await app_state.shutdown()
 

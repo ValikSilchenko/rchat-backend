@@ -10,15 +10,11 @@ from rchat.repository.user import UserRepository
 class AppState:
     def __init__(self):
         self._db = None
-        self._engine = None
         self._user_repo = None
         self._session_repo = None
 
     async def startup(self):
         self._db = await create_pool(dsn=DATABASE_DSN)
-        self._engine = create_async_engine(
-            MIGRATIONS_DATABASE_DSN, echo=True, future=True
-        )
 
         self._user_repo = UserRepository(db=self._db)
         self._session_repo = SessionRepository(db=self._db)
@@ -28,8 +24,7 @@ class AppState:
             await self._db.close()
 
     async def init_migrations(self):
-        async with self._engine.begin() as conn:
-            await conn.run_sync(SQLModel.metadata.create_all)
+        pass
 
     @property
     def user_repo(self) -> UserRepository:

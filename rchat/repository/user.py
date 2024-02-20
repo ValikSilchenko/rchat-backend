@@ -1,12 +1,20 @@
 import uuid
+from datetime import datetime
 from hashlib import sha256
 from secrets import token_hex
 from typing import Optional
 
 from asyncpg import Pool
-from pydantic import UUID3, BaseModel, UUID4
+from pydantic import UUID3, BaseModel, UUID4, EmailStr, UUID5
 
-from rchat.views.auth.models import User
+
+class User(BaseModel):
+    id: UUID5
+    public_id: str
+    password: str
+    email: EmailStr
+    user_salt: str
+    created_timestamp: datetime
 
 
 class UserFind(BaseModel):

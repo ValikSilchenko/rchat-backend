@@ -16,9 +16,3 @@ dev-stop:
 
 dev-build:
 	docker-compose -f deployments/docker-compose.dev.yml build --no-cache
-
-new_migration:
-	docker-compose -f ./deployments/docker-compose.dev.yml exec backend alembic revision --autogenerate -m $(name)
-
-run_migration:
-	docker-compose -f ./deployments/docker-compose.dev.yml exec backend alembic upgrade $(revision)
