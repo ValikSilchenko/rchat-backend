@@ -1,13 +1,11 @@
 import re
 
-from fastapi import Header
 from jose import jwt
 from pydantic import validate_email
 from pydantic_core import PydanticCustomError
 
 from rchat.conf import SECRET_KEY
-from rchat.views.auth.models import LoginTypeEnum, UserDataPatternEnum
-from rchat.repository.session import Session
+from rchat.views.auth.models import LoginTypeEnum, Session, UserDataPatternEnum
 
 
 def get_login_type(login: str) -> LoginTypeEnum | None:
@@ -48,5 +46,5 @@ def generate_tokens(session: Session, user_public_id: str) -> dict[str, str]:
     }
 
 
-def check_access_token(token: str = Header("Authorization")) -> Session:
-    print(token)
+def check_access_token() -> Session:
+    pass

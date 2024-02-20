@@ -2,21 +2,10 @@ import uuid
 from datetime import datetime, timedelta
 
 from asyncpg import Pool
-from pydantic import UUID5, UUID4, BaseModel
+from pydantic import UUID5
 
 from rchat.conf import SESSION_LIFETIME_MIN
-
-
-class Session(BaseModel):
-    id: UUID4
-    user_id: UUID5
-    ip: str | None = None
-    country: str | None
-    user_agent: str | None = None
-    is_active: bool
-    expired_at: datetime
-    refresh_id: UUID4
-    created_timestamp: datetime | None
+from rchat.views.auth.models import Session
 
 
 class SessionRepository:

@@ -4,7 +4,7 @@ import logging
 
 from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
-from rchat.repository.session import Session
+from rchat.views.auth.models import Session
 from rchat.views.user.models import FindUsersResponse
 
 logger = logging.getLogger(__name__)
