@@ -8,8 +8,8 @@ class Session(SQLModel):
     id: UUID4
     user_id: UUID5
     ip: str | None = None
-    country: str | None
-    user_agent: str | None = None
+    country: str | None = None
+    user_agent: str | None
     is_active: bool
     expired_at: datetime
     refresh_id: UUID4
