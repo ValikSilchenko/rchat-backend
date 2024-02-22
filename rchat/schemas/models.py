@@ -13,7 +13,7 @@ class Session(SQLModel):
     is_active: bool
     expired_at: datetime
     refresh_id: UUID4
-    created_timestamp: datetime | None
+    created_timestamp: datetime
 
 
 class User(SQLModel):

@@ -1,11 +1,23 @@
 import uuid
 from datetime import datetime, timedelta
+from typing import Optional
 
 from asyncpg import Pool
-from pydantic import UUID5
+from pydantic import UUID5, UUID4, BaseModel
 
 from rchat.conf import SESSION_LIFETIME_MIN
 from rchat.schemas.models import Session
+
+
+class SessionCreate(BaseModel):
+    id: UUID4
+    user_id: UUID5
+    ip: str | None = None
+    country: str | None = None
+    user_agent: str | None
+    is_active: bool
+    expired_at: datetime
+    refresh_id: UUID4
 
 
 class SessionRepository:
@@ -18,7 +30,14 @@ class SessionRepository:
         ip: str | None = None,
         user_agent: str | None = None,
     ) -> Session:
-        session_data = Session(
+        """
+        Создаёт сессию пользователя
+        :param ip: ip-адресс пользователя (при наличии)
+        :param user_agent: user_agent, с которого отправлен запрос
+         (при наличии)
+        :return: Модель сессии пользователя
+        """
+        session_data = SessionCreate(
             id=uuid.uuid4(),
             user_id=user_id,
             ip=ip,
@@ -28,7 +47,6 @@ class SessionRepository:
             expired_at=datetime.now()
             + timedelta(minutes=SESSION_LIFETIME_MIN),
             refresh_id=uuid.uuid4(),
-            created_timestamp=None,
         )
         model_dump = session_data.model_dump(exclude_none=True)
         field_names = ", ".join(model_dump.keys())
@@ -38,8 +56,26 @@ class SessionRepository:
         sql = f"""
             insert into "session" ({field_names})
             values ({placeholders})
+            returning *
         """
         async with self._db.acquire() as c:
-            await c.execute(sql, *model_dump.values())
+            row = await c.fetchrow(sql, *model_dump.values())
 
-        return session_data
+        return Session(**dict(row))
+
+    async def get_by_id(self, id_: UUID4) -> Optional[Session]:
+        """
+        Возвращает сессию пользователя по id сессии.
+        :return: Модель сессии пользователя
+        """
+        sql = """
+            select * from "session"
+            where "id" = $1
+        """
+        async with self._db.acquire() as c:
+            row = await c.fetchrow(sql, id_)
+
+        if not row:
+            return
+
+        return Session(**dict(row))

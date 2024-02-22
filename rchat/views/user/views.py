@@ -33,8 +33,7 @@ async def get_match_users(
         match_str = match_str.lstrip("@")
 
     match_users = await app_state.user_repo.find_users_by_public_id(
-        match_str=match_str,
-        except_user_id=session.user_id
+        match_str=match_str, except_user_id=session.user_id
     )
 
     return FindUsersResponse(users=match_users)

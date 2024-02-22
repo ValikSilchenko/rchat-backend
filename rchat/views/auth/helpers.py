@@ -1,12 +1,19 @@
 import re
+import logging
+from datetime import timedelta, datetime
 
-from jose import jwt
+from fastapi import Header, HTTPException
+from jose import jwt, JWTError
 from pydantic import validate_email
 from pydantic_core import PydanticCustomError
+from starlette import status
 
-from rchat.conf import SECRET_KEY
+from rchat.conf import SECRET_KEY, SESSION_LIFETIME_MIN
+from rchat.state import app_state
 from rchat.views.auth.models import LoginTypeEnum, UserDataPatternEnum
 from rchat.schemas.models import Session
+
+logger = logging.getLogger(__name__)
 
 
 def get_login_type(login: str) -> LoginTypeEnum | None:
@@ -37,7 +44,8 @@ def generate_tokens(session: Session, user_public_id: str) -> dict[str, str]:
     access_payload = {
         "session": session.id.hex,
         "public_id": user_public_id,
-        "exp": session.expired_at,
+        "exp": session.created_timestamp
+        + timedelta(minutes=SESSION_LIFETIME_MIN),
     }
     refresh_payload = {"refresh_id": session.refresh_id.hex}
 
@@ -47,5 +55,32 @@ def generate_tokens(session: Session, user_public_id: str) -> dict[str, str]:
     }
 
 
-def check_access_token() -> Session:
-    pass
+async def check_access_token(
+    auth_data: str = Header(alias="Authorization"),
+) -> Session:
+    auth_type, token = auth_data.split(" ")
+    if auth_type != "Bearer":
+        logger.error("Auth type is invalid. auth_type=%s", auth_type)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        decoded_token = jwt.decode(
+            token=token, key=SECRET_KEY, algorithms=[jwt.ALGORITHMS.HS256]
+        )
+    except JWTError:
+        logger.error("Token decoding error.")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+    session = await app_state.session_repo.get_by_id(decoded_token["session"])
+    if not session:
+        logger.error("Session not found.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    session_expire_at = session.created_timestamp + timedelta(
+        minutes=SESSION_LIFETIME_MIN
+    )
+    if session_expire_at < datetime.now():
+        logger.error("Session expired.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    return session
