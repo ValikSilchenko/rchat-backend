@@ -58,7 +58,12 @@ def generate_tokens(session: Session, user_public_id: str) -> dict[str, str]:
 async def check_access_token(
     auth_data: str = Header(alias="Authorization"),
 ) -> Session:
-    auth_type, token = auth_data.split(" ")
+    try:
+        auth_type, token = auth_data.split(" ")
+    except Exception:
+        logger.error("Invalid Authorization header format. Authorization=%s", auth_data)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
     if auth_type != "Bearer":
         logger.error("Auth type is invalid. auth_type=%s", auth_type)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
