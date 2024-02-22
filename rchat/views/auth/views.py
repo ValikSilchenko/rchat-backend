@@ -1,11 +1,11 @@
 import logging
 from hashlib import sha256
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Header, HTTPException, Depends
 from starlette import status
 
 from rchat.state import app_state
-from rchat.views.auth.helpers import generate_tokens, get_login_type
+from rchat.views.auth.helpers import generate_tokens, get_login_type, check_refresh_token
 from rchat.views.auth.models import (
     AuthBody,
     AuthResponse,
@@ -75,3 +75,8 @@ async def create_user(user_data: CreateUserData):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="user_already_exists",
         )
+
+
+@router.post("/api/refresh_tokens")
+async def update_tokens(_=Depends(check_refresh_token)):
+    pass

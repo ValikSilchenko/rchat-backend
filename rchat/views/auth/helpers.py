@@ -58,6 +58,12 @@ def generate_tokens(session: Session, user_public_id: str) -> dict[str, str]:
 async def check_access_token(
     auth_data: str = Header(alias="Authorization"),
 ) -> Session:
+    """
+    Проверяет access_token пользователя на валидность.
+    Для валидного токена возвращает Session.
+    :return: Модель сессии пользователя в случае валидного токена
+    :raise HTTPException: в случаях невалидности токена
+    """
     try:
         auth_type, token = auth_data.split(" ")
     except Exception:
@@ -86,6 +92,31 @@ async def check_access_token(
     )
     if session_expire_at < datetime.now():
         logger.error("Session expired.")
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="token_expired")
 
     return session
+
+
+async def check_refresh_token(token: str = Header(alias="Authorization")):
+    """
+    Проверяет refresh_token пользователя на валидность.
+    Нужен для обновления токенов доступа.
+    :raise HTTPException: в случаях невалидности токена
+    """
+    try:
+        token_data = jwt.decode(
+            token=token, key=SECRET_KEY, algorithms=[jwt.ALGORITHMS.HS256]
+        )
+        session = await app_state.session_repo.get_by_refresh_id(
+            refresh_id=token_data["refresh_id"]
+        )
+        if not session:
+            logger.error("Session not found.")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    except JWTError:
+        logger.error("Token decoding error.")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    except Exception as err:
+        logger.error("An error occurred while token decoding. err=%s", err)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)

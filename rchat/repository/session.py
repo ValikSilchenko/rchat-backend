@@ -79,3 +79,20 @@ class SessionRepository:
             return
 
         return Session(**dict(row))
+
+    async def get_by_refresh_id(self, refresh_id: UUID4) -> Optional[Session]:
+        """
+        Получает сессию пользователя по refresh_id этой сессии.
+        :return: Модель сессии пользователя
+        """
+        sql = """
+            select * from "session"
+            where "refresh_id" = $1
+        """
+        async with self._db.acquire() as c:
+            row = await c.fetchrow(sql, refresh_id)
+
+        if not row:
+            return
+
+        return Session(**dict(row))
