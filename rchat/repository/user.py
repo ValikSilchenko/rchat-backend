@@ -101,7 +101,7 @@ class UserRepository:
         return User(**dict(row))
 
     async def find_users_by_public_id(
-            self, match_str: str, except_user_id: UUID4 | None = None
+        self, match_str: str, except_user_id: UUID4 | None = None
     ) -> list[UserFind]:
         """
         Возвращает пользователей, подходящих под поисковую строку.
@@ -116,7 +116,7 @@ class UserRepository:
         sql = f"""
             select "public_id" from "user"
             where "public_id" like '@%' || $1 || '%'
-            and {'"id" <> $2' if except_user_id else True} 
+            and {'"id" <> $2' if except_user_id else True}
             order by
             case
                 when "public_id" like '@' || $1 then 1
