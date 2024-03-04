@@ -4,6 +4,7 @@ from hashlib import sha256
 from fastapi import APIRouter, Header, HTTPException, Depends
 from starlette import status
 
+from rchat.schemas.models import Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import generate_tokens, get_login_type, check_refresh_token
 from rchat.views.auth.models import (
@@ -77,6 +78,14 @@ async def create_user(user_data: CreateUserData):
         )
 
 
-@router.post("/api/refresh_tokens")
-async def update_tokens(_=Depends(check_refresh_token)):
-    pass
+@router.put("/api/refresh_tokens")
+async def update_tokens(session: Session = Depends(check_refresh_token)):
+    new_session = await app_state.session_repo.create(
+        user_id=session.user_id, ip=session.ip, user_agent=session.user_agent
+    )
+    await app_state.session_repo.delete_session(session_id=session.id)
+
+    user = await app_state.user_repo.get_by_id(id_=session.user_id)
+    tokens = generate_tokens(session=new_session, user_public_id=user.public_id)
+    return AuthResponse(**tokens)
+

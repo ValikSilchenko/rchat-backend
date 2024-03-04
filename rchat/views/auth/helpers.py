@@ -97,12 +97,22 @@ async def check_access_token(
     return session
 
 
-async def check_refresh_token(token: str = Header(alias="Authorization")):
+async def check_refresh_token(auth_data: str = Header(alias="Authorization")) -> Session:
     """
     Проверяет refresh_token пользователя на валидность.
     Нужен для обновления токенов доступа.
     :raise HTTPException: в случаях невалидности токена
     """
+    try:
+        auth_type, token = auth_data.split(" ")
+    except Exception:
+        logger.error("Invalid Authorization header format. Authorization=%s", auth_data)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+    if auth_type != "Bearer":
+        logger.error("Auth type is invalid. auth_type=%s", auth_type)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
     try:
         token_data = jwt.decode(
             token=token, key=SECRET_KEY, algorithms=[jwt.ALGORITHMS.HS256]
@@ -114,6 +124,7 @@ async def check_refresh_token(token: str = Header(alias="Authorization")):
             logger.error("Session not found.")
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
+        return session
     except JWTError:
         logger.error("Token decoding error.")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)

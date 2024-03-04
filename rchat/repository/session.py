@@ -96,3 +96,18 @@ class SessionRepository:
             return
 
         return Session(**dict(row))
+
+    async def delete_session(self, session_id: UUID4) -> bool:
+        """
+        Удаляет сессию пользователя по id сессии.
+        :return: True в случае успешного удаления,
+         False если сессия не найдена.
+        """
+        sql = """
+            delete from "session" where "id" = $1
+            returning true
+        """
+        async with self._db.acquire() as c:
+            result = await c.fetchrow(sql, session_id)
+
+        return bool(result)
