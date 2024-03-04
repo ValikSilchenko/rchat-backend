@@ -67,7 +67,9 @@ async def check_access_token(
     try:
         auth_type, token = auth_data.split(" ")
     except Exception:
-        logger.error("Invalid Authorization header format. Authorization=%s", auth_data)
+        logger.error(
+            "Invalid Authorization header format. Authorization=%s", auth_data
+        )
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     if auth_type != "Bearer":
@@ -92,12 +94,16 @@ async def check_access_token(
     )
     if session_expire_at < datetime.now():
         logger.error("Session expired.")
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="token_expired")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="token_expired"
+        )
 
     return session
 
 
-async def check_refresh_token(auth_data: str = Header(alias="Authorization")) -> Session:
+async def check_refresh_token(
+    auth_data: str = Header(alias="Authorization"),
+) -> Session:
     """
     Проверяет refresh_token пользователя на валидность.
     Нужен для обновления токенов доступа.
@@ -106,7 +112,9 @@ async def check_refresh_token(auth_data: str = Header(alias="Authorization")) ->
     try:
         auth_type, token = auth_data.split(" ")
     except Exception:
-        logger.error("Invalid Authorization header format. Authorization=%s", auth_data)
+        logger.error(
+            "Invalid Authorization header format. Authorization=%s", auth_data
+        )
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     if auth_type != "Bearer":

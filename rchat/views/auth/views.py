@@ -6,7 +6,11 @@ from starlette import status
 
 from rchat.schemas.models import Session
 from rchat.state import app_state
-from rchat.views.auth.helpers import generate_tokens, get_login_type, check_refresh_token
+from rchat.views.auth.helpers import (
+    generate_tokens,
+    get_login_type,
+    check_refresh_token,
+)
 from rchat.views.auth.models import (
     AuthBody,
     AuthResponse,
@@ -19,7 +23,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/api/auth")
+@router.post("/api/auth", response_model=AuthResponse)
 async def auth(
     body: AuthBody,
     user_agent: str | None = Header(default=None),
@@ -78,7 +82,7 @@ async def create_user(user_data: CreateUserData):
         )
 
 
-@router.put("/api/refresh_tokens")
+@router.put("/api/refresh_tokens", response_model=AuthResponse)
 async def update_tokens(session: Session = Depends(check_refresh_token)):
     new_session = await app_state.session_repo.create(
         user_id=session.user_id, ip=session.ip, user_agent=session.user_agent
@@ -86,6 +90,7 @@ async def update_tokens(session: Session = Depends(check_refresh_token)):
     await app_state.session_repo.delete_session(session_id=session.id)
 
     user = await app_state.user_repo.get_by_id(id_=session.user_id)
-    tokens = generate_tokens(session=new_session, user_public_id=user.public_id)
+    tokens = generate_tokens(
+        session=new_session, user_public_id=user.public_id
+    )
     return AuthResponse(**tokens)
-

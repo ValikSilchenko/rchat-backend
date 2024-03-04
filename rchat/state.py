@@ -1,6 +1,6 @@
 from asyncpg import create_pool
 
-from rchat.conf import DATABASE_DSN, MIGRATIONS_DATABASE_DSN
+from rchat.conf import DATABASE_DSN
 from rchat.repository.session import SessionRepository
 from rchat.repository.user import UserRepository
 
