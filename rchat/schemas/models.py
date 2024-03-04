@@ -1,10 +1,9 @@
 from datetime import datetime
 
-from pydantic import UUID4, UUID5
-from sqlmodel import SQLModel
+from pydantic import UUID4, UUID5, BaseModel
 
 
-class Session(SQLModel):
+class Session(BaseModel):
     id: UUID4
     user_id: UUID5
     ip: str | None = None
@@ -16,7 +15,7 @@ class Session(SQLModel):
     created_timestamp: datetime
 
 
-class User(SQLModel):
+class User(BaseModel):
     id: UUID5
     public_id: str
     password: str

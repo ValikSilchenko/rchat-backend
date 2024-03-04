@@ -1,6 +1,4 @@
 from asyncpg import create_pool
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlmodel import SQLModel
 
 from rchat.conf import DATABASE_DSN, MIGRATIONS_DATABASE_DSN
 from rchat.repository.session import SessionRepository
@@ -16,9 +14,6 @@ class AppState:
 
     async def startup(self):
         self._db = await create_pool(dsn=DATABASE_DSN)
-        self._engine = create_async_engine(
-            MIGRATIONS_DATABASE_DSN, echo=True, future=True
-        )
 
         self._user_repo = UserRepository(db=self._db)
         self._session_repo = SessionRepository(db=self._db)
@@ -26,10 +21,6 @@ class AppState:
     async def shutdown(self):
         if self._db:
             await self._db.close()
-
-    async def init_migrations(self):
-        async with self._engine.begin() as conn:
-            await conn.run_sync(SQLModel.metadata.create_all)
 
     @property
     def user_repo(self) -> UserRepository:
