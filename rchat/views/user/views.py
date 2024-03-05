@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends
-
 import logging
 
+from fastapi import APIRouter, Depends
+
+from rchat.schemas.models import Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
-from rchat.schemas.models import Session
 from rchat.views.user.models import FindUsersResponse
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ def get_profile_data(session: Session = Depends(check_access_token)):
     pass
 
 
-@router.get("/user/find")
+@router.get("/user/find", response_model=FindUsersResponse)
 async def get_match_users(
     match_str: str, session: Session = Depends(check_access_token)
 ):

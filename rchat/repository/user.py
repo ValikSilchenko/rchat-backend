@@ -4,7 +4,7 @@ from secrets import token_hex
 from typing import Optional
 
 from asyncpg import Pool
-from pydantic import UUID3, BaseModel, UUID4
+from pydantic import UUID3, UUID4, BaseModel
 
 from rchat.schemas.models import User
 
