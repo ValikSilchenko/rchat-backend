@@ -11,7 +11,7 @@ create table "session" (
     user_id uuid not null,
     ip varchar(15),
     country varchar(16),
-    user_agent varchar(32),
+    user_agent varchar(64),
     is_active bool not null default true,
     expired_at timestamp not null,
     refresh_id uuid not null,
