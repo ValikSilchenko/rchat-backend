@@ -8,7 +8,7 @@ from pydantic import validate_email
 from pydantic_core import PydanticCustomError
 from starlette import status
 
-from rchat.conf import SECRET_KEY, SESSION_LIFETIME_MIN
+from rchat.conf import REFRESH_LIFETIME_DAYS, SECRET_KEY, SESSION_LIFETIME_MIN
 from rchat.schemas.models import Session
 from rchat.state import app_state
 from rchat.views.auth.models import LoginTypeEnum, UserDataPatternEnum
@@ -46,8 +46,14 @@ def generate_tokens(session: Session, user_public_id: str) -> dict[str, str]:
         "public_id": user_public_id,
         "exp": session.created_timestamp
         + timedelta(minutes=SESSION_LIFETIME_MIN),
+        "token_type": "access",
     }
-    refresh_payload = {"refresh_id": session.refresh_id.hex}
+    refresh_payload = {
+        "session": session.id.hex,
+        "exp": session.created_timestamp
+        + timedelta(days=REFRESH_LIFETIME_DAYS),
+        "token_type": "refresh",
+    }
 
     return {
         "access_token": jwt.encode(claims=access_payload, key=SECRET_KEY),
@@ -57,15 +63,16 @@ def generate_tokens(session: Session, user_public_id: str) -> dict[str, str]:
 
 def get_decoded_token(auth_data: str) -> dict:
     """
-    Получает
-    :param auth_data:
-    :return:
+    Получает payload из Bearer JWT токена.
+    :param auth_data: строка заголовка Authorizartion
+    :return: payload токена из заголовка
+    :raise HTTPException: в случае ошибок при декодировании токена
     """
     try:
         auth_type, token = auth_data.split(" ")
     except Exception:
         logger.error(
-            "Invalid Authorization header format. Authorization=%s", auth_data
+            "Invalid Authorization header format. auth_data=%s", auth_data
         )
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
@@ -97,17 +104,15 @@ async def check_access_token(
 
     session = await app_state.session_repo.get_by_id(token["session"])
     if not session:
-        logger.error("Session not found.")
+        logger.error("Session not found. token_data=%s", token)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     session_expire_at = session.created_timestamp + timedelta(
         minutes=SESSION_LIFETIME_MIN
     )
     if session_expire_at < datetime.now():
-        logger.error("Session expired.")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="token_expired"
-        )
+        logger.error("Session expired. session_id=%s", session.id)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     return session
 
@@ -121,11 +126,17 @@ async def check_refresh_token(
     :raise HTTPException: в случаях невалидности токена
     """
     token = get_decoded_token(auth_data)
-    session = await app_state.session_repo.get_by_refresh_id(
-        refresh_id=token["refresh_id"]
+    session = await app_state.session_repo.get_by_id(
+        id_=token["session"]
     )
     if not session:
-        logger.error("Session not found.")
+        logger.error("Session not found. token_data=%s", token)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+    if session.created_timestamp + timedelta(days=REFRESH_LIFETIME_DAYS) < datetime.now():
+        logger.error(
+            "Refresh token of session has expired. session_id=%s", session.id
+        )
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     return session
