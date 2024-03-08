@@ -1,7 +1,6 @@
 import logging
 
-from starlette.requests import Request
-from starlette.responses import Response
+from fastapi import Request, Response
 
 logger = logging.getLogger(__name__)
 

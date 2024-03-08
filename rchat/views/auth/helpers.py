@@ -82,7 +82,10 @@ def get_decoded_token(auth_data: str) -> dict:
 
     try:
         decoded_token = jwt.decode(
-            token=token, key=SECRET_KEY, algorithms=[jwt.ALGORITHMS.HS256]
+            token=token,
+            key=SECRET_KEY,
+            algorithms=[jwt.ALGORITHMS.HS256],
+            options={"verify_exp": False},
         )
     except JWTError:
         logger.error("Token decoding error.")
@@ -126,16 +129,17 @@ async def check_refresh_token(
     :raise HTTPException: в случаях невалидности токена
     """
     token = get_decoded_token(auth_data)
-    session = await app_state.session_repo.get_by_id(
-        id_=token["session"]
-    )
+    session = await app_state.session_repo.get_by_id(id_=token["session"])
     if not session:
         logger.error("Session not found. token_data=%s", token)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-    if session.created_timestamp + timedelta(days=REFRESH_LIFETIME_DAYS) < datetime.now():
+    token_expire_at = session.created_timestamp + timedelta(
+        days=REFRESH_LIFETIME_DAYS
+    )
+    if token_expire_at < datetime.now():
         logger.error(
-            "Refresh token of session has expired. session_id=%s", session.id
+            "Refresh token expired. session_id=%s", session.id
         )
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
