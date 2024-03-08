@@ -33,7 +33,7 @@ app.middleware("http")(access_log_middleware)
 
 @app.exception_handler(RequestValidationError)
 async def validation_error_handler(request, error):
-    logger.error("Validation error=%s", {"url": request.url, "err": error})
+    logger.error("Validation error=%s", error)
     return await request_validation_exception_handler(request, error)
 
 
