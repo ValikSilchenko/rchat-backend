@@ -17,11 +17,8 @@ dev-stop:
 dev-build:
 	docker-compose -f deployments/docker-compose.dev.yml build --no-cache
 
-new-migration:
-	docker-compose -f ./deployments/docker-compose.dev.yml exec backend alembic revision --autogenerate -m $(name)
+start_postgres:
+	docker-compose -f ./deployments/docker-compose.dev.yml up postgres > postgres_logs &
 
-upgrade-db:
-	docker-compose -f ./deployments/docker-compose.dev.yml exec backend alembic upgrade $(revision)
-
-downgrade-db:
-	docker-compose -f ./deployments/docker-compose.dev.yml exec backend alembic downgrade -1
+start_backend:
+	docker-compose -f ./deployments/docker-compose.dev.yml up backend > rchat_logs &
