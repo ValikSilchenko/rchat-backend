@@ -132,7 +132,7 @@ async def check_refresh_token(
     session = await app_state.session_repo.get_by_id(id_=token["session"])
     if not session:
         logger.error("Session not found. token_data=%s", token)
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     token_expire_at = session.created_timestamp + timedelta(
         days=REFRESH_LIFETIME_DAYS
@@ -141,6 +141,6 @@ async def check_refresh_token(
         logger.error(
             "Refresh token expired. session_id=%s", session.id
         )
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     return session
