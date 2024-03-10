@@ -5,7 +5,9 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
+from starlette.websockets import WebSocket
 
+from rchat.clients.socketio_client import asio_app
 from rchat.log import setup_logging
 from rchat.middlewares import access_log_middleware
 from rchat.state import app_state
@@ -27,6 +29,8 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(auth_router)
 app.include_router(user_router)
+
+app.mount(path="/", app=asio_app)
 
 app.middleware("http")(access_log_middleware)
 
