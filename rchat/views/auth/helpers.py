@@ -138,9 +138,7 @@ async def check_refresh_token(
         days=REFRESH_LIFETIME_DAYS
     )
     if token_expire_at < datetime.now():
-        logger.error(
-            "Refresh token expired. session_id=%s", session.id
-        )
+        logger.error("Refresh token expired. session_id=%s", session.id)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     return session

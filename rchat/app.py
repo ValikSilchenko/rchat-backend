@@ -5,8 +5,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
-from starlette.websockets import WebSocket
 
+import migration_runner
 from rchat.clients.socketio_client import asio_app
 from rchat.log import setup_logging
 from rchat.middlewares import access_log_middleware
@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    migration_runner.apply_migrations()
     await app_state.startup()
     yield
     await app_state.shutdown()
