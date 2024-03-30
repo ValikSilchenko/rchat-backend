@@ -6,13 +6,14 @@ from fastapi import FastAPI
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
 
-import migration_runner
+from rchat import migration_runner
 from rchat.clients.socketio_client import asio_app
 from rchat.log import setup_logging
 from rchat.middlewares import access_log_middleware
 from rchat.state import app_state
 from rchat.views.auth.views import router as auth_router
 from rchat.views.user.views import router as user_router
+from rchat.views.message.views import router as message_router
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(auth_router)
 app.include_router(user_router)
+app.include_router(message_router)
 
 app.mount(path="/", app=asio_app)
 
