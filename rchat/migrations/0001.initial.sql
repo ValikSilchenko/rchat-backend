@@ -58,15 +58,6 @@ create table "chat" (
     created_timestamp timestamp not null default now()
 );
 
-create table "chat_user" (
-    chat_id uuid references "chat" ("id"),
-    user_id uuid references "user" ("id"),
-    is_chat_owner bool not null default false,
-    last_available_message uuid references "message" ("id"),
-    created_timestamp timestamp not null default now(),
-    primary key ("chat_id", "user_id")
-);
-
 create table "message" (
     id uuid primary key,
     chat_id uuid not null references "chat" ("id"),
@@ -82,6 +73,15 @@ create table "message" (
     created_timestamp timestamp not null default now()
 );
 
+create table "chat_user" (
+    chat_id uuid references "chat" ("id"),
+    user_id uuid references "user" ("id"),
+    is_chat_owner bool not null default false,
+    last_available_message uuid references "message" ("id"),
+    created_timestamp timestamp not null default now(),
+    primary key ("chat_id", "user_id")
+);
+
 create table "message_read" (
     message_id uuid references "message" ("id"),
     user_id uuid references "user" ("id"),
@@ -92,6 +92,6 @@ create table "message_read" (
 create table "message_attachment" (
     message_id uuid references "message" ("id"),
     media_id uuid references "media" ("id"),
-    primary key ("message_id", "message_id")
+    primary key ("message_id", "media_id")
 );
 
