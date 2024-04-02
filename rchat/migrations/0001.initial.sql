@@ -95,3 +95,9 @@ create table "message_attachment" (
     primary key ("message_id", "media_id")
 );
 
+create table "update" (
+    id uuid primary key,
+    type varchar(16) not null,
+    user_id uuid not null references "user" ("id"),
+    update_message_id uuid references "message" ("id")
+);
