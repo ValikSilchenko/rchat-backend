@@ -17,7 +17,6 @@ class SessionCreate(BaseModel):
     user_agent: str | None
     is_active: bool
     expired_at: datetime
-    refresh_id: UUID4
 
 
 class SessionRepository:
@@ -45,8 +44,7 @@ class SessionRepository:
             country=None,
             is_active=True,
             expired_at=datetime.now()
-            + timedelta(minutes=SESSION_LIFETIME_MIN),
-            refresh_id=uuid.uuid4(),
+            + timedelta(minutes=SESSION_LIFETIME_MIN)
         )
         model_dump = session_data.model_dump(exclude_none=True)
         field_names = ", ".join(model_dump.keys())
@@ -74,23 +72,6 @@ class SessionRepository:
         """
         async with self._db.acquire() as c:
             row = await c.fetchrow(sql, id_)
-
-        if not row:
-            return
-
-        return Session(**dict(row))
-
-    async def get_by_refresh_id(self, refresh_id: UUID4) -> Optional[Session]:
-        """
-        Получает сессию пользователя по refresh_id этой сессии.
-        :return: Модель сессии пользователя
-        """
-        sql = """
-            select * from "session"
-            where "refresh_id" = $1
-        """
-        async with self._db.acquire() as c:
-            row = await c.fetchrow(sql, refresh_id)
 
         if not row:
             return
