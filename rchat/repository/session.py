@@ -6,6 +6,7 @@ from asyncpg import Pool
 from pydantic import UUID4, UUID5, BaseModel
 
 from rchat.conf import SESSION_LIFETIME_MIN
+from rchat.repository.helpers import build_model
 from rchat.schemas.models import Session
 
 
@@ -44,20 +45,16 @@ class SessionRepository:
             country=None,
             is_active=True,
             expired_at=datetime.now()
-            + timedelta(minutes=SESSION_LIFETIME_MIN)
+            + timedelta(minutes=SESSION_LIFETIME_MIN),
         )
-        model_dump = session_data.model_dump(exclude_none=True)
-        field_names = ", ".join(model_dump.keys())
-        placeholders = ", ".join(
-            [f"${i}" for i in range(1, len(model_dump) + 1)]
-        )
+        sql_build = build_model(model=session_data, exclude_none=True)
         sql = f"""
-            insert into "session" ({field_names})
-            values ({placeholders})
+            insert into "session" ({sql_build.field_names})
+            values ({sql_build.placeholders})
             returning *
         """
         async with self._db.acquire() as c:
-            row = await c.fetchrow(sql, *model_dump.values())
+            row = await c.fetchrow(sql, *sql_build.values)
 
         return Session(**dict(row))
 

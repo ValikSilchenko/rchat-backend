@@ -12,8 +12,8 @@ from rchat.log import setup_logging
 from rchat.middlewares import access_log_middleware
 from rchat.state import app_state
 from rchat.views.auth.views import router as auth_router
-from rchat.views.user.views import router as user_router
 from rchat.views.message.views import router as message_router
+from rchat.views.user.views import router as user_router
 
 setup_logging()
 logger = logging.getLogger(__name__)
