@@ -1,7 +1,7 @@
 import logging
 import os
 
-from rchat.conf import STORAGE_FOLDERS, STORAGE_DIR
+from rchat.conf import STORAGE_DIR, STORAGE_FOLDERS
 
 logger = logging.getLogger(__name__)
 
