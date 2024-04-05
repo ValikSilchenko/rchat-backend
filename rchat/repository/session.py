@@ -32,6 +32,7 @@ class SessionRepository:
     ) -> Session:
         """
         Создаёт сессию пользователя
+        :param user_id: uuid пользователя
         :param ip: ip-адресс пользователя (при наличии)
         :param user_agent: user_agent, с которого отправлен запрос
          (при наличии)
