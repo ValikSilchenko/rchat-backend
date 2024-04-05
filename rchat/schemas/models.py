@@ -11,7 +11,6 @@ class Session(BaseModel):
     user_agent: str | None
     is_active: bool
     expired_at: datetime
-    refresh_id: UUID4
     created_timestamp: datetime
 
 

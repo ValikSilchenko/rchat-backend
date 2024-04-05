@@ -6,6 +6,7 @@ from asyncpg import Pool
 from pydantic import UUID4, UUID5, BaseModel
 
 from rchat.conf import SESSION_LIFETIME_MIN
+from rchat.repository.helpers import build_model
 from rchat.schemas.models import Session
 
 
@@ -17,7 +18,6 @@ class SessionCreate(BaseModel):
     user_agent: str | None
     is_active: bool
     expired_at: datetime
-    refresh_id: UUID4
 
 
 class SessionRepository:
@@ -32,6 +32,7 @@ class SessionRepository:
     ) -> Session:
         """
         Создаёт сессию пользователя
+        :param user_id: uuid пользователя
         :param ip: ip-адресс пользователя (при наличии)
         :param user_agent: user_agent, с которого отправлен запрос
          (при наличии)
@@ -46,20 +47,15 @@ class SessionRepository:
             is_active=True,
             expired_at=datetime.now()
             + timedelta(minutes=SESSION_LIFETIME_MIN),
-            refresh_id=uuid.uuid4(),
         )
-        model_dump = session_data.model_dump(exclude_none=True)
-        field_names = ", ".join(model_dump.keys())
-        placeholders = ", ".join(
-            [f"${i}" for i in range(1, len(model_dump) + 1)]
-        )
+        sql_build = build_model(model=session_data, exclude_none=True)
         sql = f"""
-            insert into "session" ({field_names})
-            values ({placeholders})
+            insert into "session" ({sql_build.field_names})
+            values ({sql_build.placeholders})
             returning *
         """
         async with self._db.acquire() as c:
-            row = await c.fetchrow(sql, *model_dump.values())
+            row = await c.fetchrow(sql, *sql_build.values)
 
         return Session(**dict(row))
 
@@ -74,23 +70,6 @@ class SessionRepository:
         """
         async with self._db.acquire() as c:
             row = await c.fetchrow(sql, id_)
-
-        if not row:
-            return
-
-        return Session(**dict(row))
-
-    async def get_by_refresh_id(self, refresh_id: UUID4) -> Optional[Session]:
-        """
-        Получает сессию пользователя по refresh_id этой сессии.
-        :return: Модель сессии пользователя
-        """
-        sql = """
-            select * from "session"
-            where "refresh_id" = $1
-        """
-        async with self._db.acquire() as c:
-            row = await c.fetchrow(sql, refresh_id)
 
         if not row:
             return
