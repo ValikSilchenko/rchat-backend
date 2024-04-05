@@ -13,3 +13,6 @@ MIGRATIONS_PATH = os.path.join("app", "rchat", "migrations")
 
 SESSION_LIFETIME_MIN = int(os.environ.get("RCHAT_SESSION_LIFETIME_MIN"))
 REFRESH_LIFETIME_DAYS = int(os.environ.get("RCHAT_REFRESH_LIFETIME_DAYS"))
+
+STORAGE_DIR = os.environ.get("RCHAT_STORAGE_DIR")
+STORAGE_FOLDERS = ["files", "temp"]

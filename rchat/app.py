@@ -8,6 +8,7 @@ from fastapi.exceptions import RequestValidationError
 
 from rchat import migration_runner
 from rchat.clients.socketio_client import asio_app
+from rchat.helpers import create_storage_folders
 from rchat.log import setup_logging
 from rchat.middlewares import access_log_middleware
 from rchat.state import app_state
@@ -22,6 +23,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     migration_runner.apply_migrations()
+    create_storage_folders()
     await app_state.startup()
     yield
     await app_state.shutdown()
