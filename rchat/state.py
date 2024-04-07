@@ -1,8 +1,10 @@
 from asyncpg import create_pool
 
 from rchat.conf import DATABASE_DSN
+from rchat.repository.chat import ChatRepository
 from rchat.repository.geoip import GeoIPRepository
 from rchat.repository.media import MediaRepository
+from rchat.repository.message import MessageRepository
 from rchat.repository.session import SessionRepository
 from rchat.repository.user import UserRepository
 
@@ -15,6 +17,8 @@ class AppState:
         self._session_repo = None
         self._geoip_repo = None
         self._media_repo = None
+        self._chat_repo = None
+        self._message_repo = None
 
     async def startup(self):
         self._db = await create_pool(dsn=DATABASE_DSN)
@@ -23,6 +27,8 @@ class AppState:
         self._session_repo = SessionRepository(db=self._db)
         self._geoip_repo = GeoIPRepository(db=self._db)
         self._media_repo = MediaRepository(db=self._db)
+        self._chat_repo = ChatRepository(db=self._db)
+        self._message_repo = MessageRepository(db=self._db)
 
     async def shutdown(self):
         if self._db:
@@ -47,6 +53,16 @@ class AppState:
     def media_repo(self) -> MediaRepository:
         assert self._media_repo
         return self._media_repo
+
+    @property
+    def chat_repo(self) -> ChatRepository:
+        assert self._chat_repo
+        return self._chat_repo
+
+    @property
+    def message_repo(self) -> MessageRepository:
+        assert self._message_repo
+        return self._message_repo
 
 
 app_state = AppState()
