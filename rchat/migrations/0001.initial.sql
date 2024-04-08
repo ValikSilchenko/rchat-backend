@@ -58,6 +58,8 @@ create table "chat" (
     created_timestamp timestamp not null default now()
 );
 
+create sequence message_order_id_seq as bigint;
+
 create table "message" (
     id uuid primary key,
     type varchar(16) not null,
@@ -71,8 +73,11 @@ create table "message" (
     forwarded_message uuid references "message" ("id"),
     is_silent bool not null default false,
     last_edited_at timestamp,
-    created_timestamp timestamp not null default now()
+    created_timestamp timestamp not null default now(),
+    order_id bigint not null default nextval('message_order_id_seq'::regclass)
 );
+
+create index idx_message_order_id on "message" ("order_id");
 
 create table "chat_user" (
     chat_id uuid references "chat" ("id"),
@@ -96,9 +101,15 @@ create table "message_attachment" (
     primary key ("message_id", "media_id")
 );
 
+create sequence update_order_id_seq as bigint;
+
 create table "update" (
     id uuid primary key,
     type varchar(16) not null,
     user_id uuid not null references "user" ("id"),
-    update_message_id uuid references "message" ("id")
+    update_message_id uuid references "message" ("id"),
+    order_id bigint not null default nextval('update_order_id_seq'::regclass)
 );
+
+create index idx_update_order_id on "update" ("order_id");
+
