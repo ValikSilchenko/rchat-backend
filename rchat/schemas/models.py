@@ -38,8 +38,15 @@ class Chat(BaseModel):
     created_timestamp: datetime
 
 
+class MessageTypeEnum(StrEnum):
+    text = "text"
+    audio = "audio"
+    video = "video"
+
+
 class Message(BaseModel):
     id: UUID4
+    type: MessageTypeEnum
     chat_id: UUID4
     sender_user_id: UUID5 | None
     sender_chat_id: UUID4 | None

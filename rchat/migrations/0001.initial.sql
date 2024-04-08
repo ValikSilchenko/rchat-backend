@@ -60,6 +60,7 @@ create table "chat" (
 
 create table "message" (
     id uuid primary key,
+    type varchar(16) not null,
     chat_id uuid not null references "chat" ("id"),
     sender_user_id uuid references "user" ("id"),
     sender_chat_id uuid references "chat" ("id"),
