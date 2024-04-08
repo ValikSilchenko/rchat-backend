@@ -11,6 +11,7 @@ class Session(BaseModel):
     country: str | None = None
     user_agent: str | None
     is_active: bool
+    device_fingerprint: str | None
     created_timestamp: datetime
 
 
@@ -20,6 +21,11 @@ class User(BaseModel):
     password: str
     email: str
     user_salt: str
+    first_name: str
+    last_name: str | None
+    avatar_photo_id: UUID4 | None
+    profile_status: str | None
+    profile_bio: str | None
     created_timestamp: datetime
 
 
