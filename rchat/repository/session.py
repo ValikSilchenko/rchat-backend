@@ -17,7 +17,6 @@ class SessionCreate(BaseModel):
     country: str | None = None
     user_agent: str | None
     is_active: bool
-    expired_at: datetime
 
 
 class SessionRepository:
@@ -45,8 +44,6 @@ class SessionRepository:
             user_agent=user_agent,
             country=None,
             is_active=True,
-            expired_at=datetime.now()
-            + timedelta(minutes=SESSION_LIFETIME_MIN),
         )
         sql_build = build_model(model=session_data, exclude_none=True)
         sql = f"""

@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import StrEnum
 
 from pydantic import UUID4, UUID5, BaseModel
 
@@ -10,7 +11,6 @@ class Session(BaseModel):
     country: str | None = None
     user_agent: str | None
     is_active: bool
-    expired_at: datetime
     created_timestamp: datetime
 
 
@@ -20,4 +20,34 @@ class User(BaseModel):
     password: str
     email: str
     user_salt: str
+    created_timestamp: datetime
+
+
+class ChatTypeEnum(StrEnum):
+    private = "private"
+    group = "group"
+    channel = "channel"
+
+
+class Chat(BaseModel):
+    id: UUID4
+    type: ChatTypeEnum
+    name: str | None
+    avatar_photo_id: UUID4 | None
+    description: str | None
+    created_timestamp: datetime
+
+
+class Message(BaseModel):
+    id: UUID4
+    chat_id: UUID4
+    sender_user_id: UUID5 | None
+    sender_chat_id: UUID4 | None
+    message_text: str | None
+    audio_msg_file_id: UUID4 | None
+    video_msg_file_id: UUID4 | None
+    reply_to_message: UUID4 | None
+    forwarded_message: UUID4 | None
+    is_silent: bool
+    last_edited_at: datetime | None
     created_timestamp: datetime
