@@ -53,7 +53,7 @@ class MessageRepository:
             order by "created_timestamp" desc limit $3
         """
         async with self._db.acquire() as c:
-            rows = await c.fetchrow(sql, chat_id, last_order_id, limit)
+            rows = await c.fetch(sql, chat_id, last_order_id, limit)
 
         return [Message(**dict(row)) for row in rows]
 
@@ -67,6 +67,25 @@ class MessageRepository:
         """
         async with self._db.acquire() as c:
             row = await c.fetchrow(sql, id_)
+
+        if not row:
+            return
+
+        return Message(**dict(row))
+
+    async def get_last_chat_message(
+            self, chat_id: UUID4
+    ) -> Optional[Message]:
+        sql = """
+            select * from "message" m1
+            where "chat_id" = $1 and "created_timestamp" = (
+                select max("created_timestamp") from "message" m2
+                where m2."chat_id" = $1
+            )
+            order by "created_timestamp" desc
+        """
+        async with self._db.acquire() as c:
+            row = await c.fetchrow(sql, chat_id)
 
         if not row:
             return
