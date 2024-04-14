@@ -95,7 +95,7 @@ class ChatRepository:
 
     async def get_private_chat_with_users(self, users_id_list: list[UUID5]) -> Optional[Chat]:
         sql = f"""
-            select 
+            select distinct
                 c.id,
                 c.type,
                 c.name,
@@ -103,11 +103,12 @@ class ChatRepository:
                 c.description,
                 c.created_timestamp
             from "chat_user" cu1
-            left join "chat_user" cu2
-            on cu1."chat_id" = cu2."chat_id"
-            left join "chat" c on c."id" = cu1."chat_id"
-            where cu1."user_id" = any($1) and cu2."user_id" = any($1)
-            and c."type" = '{ChatTypeEnum.private}'
+                left join "chat_user" cu2 on cu1."chat_id" = cu2."chat_id"
+                left join "chat" c on c."id" = cu1."chat_id"
+            where 
+                cu1."user_id" != cu2."user_id"
+                and cu1."user_id" = any($1) and cu2."user_id" = any($1)
+                and c."type" = '{ChatTypeEnum.private}'
         """
         async with self._db.acquire() as c:
             row = await c.fetchrow(sql, users_id_list)
