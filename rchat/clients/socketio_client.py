@@ -1,11 +1,10 @@
-import asyncio
 import logging
 from enum import StrEnum
 
 import socketio
-from engineio.async_server import task_reference_holder
-from fastapi import Header, HTTPException
-from pydantic import BaseModel
+from fastapi import HTTPException
+from pydantic import ValidationError
+from socketio import packet
 
 from rchat.views.auth.helpers import check_access_token
 
@@ -20,6 +19,11 @@ class SocketioEventsEnum(StrEnum):
     error = "_error_"
 
 
+class SocketioErrorStatusEnum(StrEnum):
+    invalid_data = "invalid_data"
+    server_error = "server_error"
+
+
 class SocketIOClient(socketio.AsyncServer):
     def __init__(self):
         super().__init__(
@@ -28,71 +32,71 @@ class SocketIOClient(socketio.AsyncServer):
         )
         self.users = {}
 
-    # async def _handle_event(self, sid, namespace, id, data):
-    #     logger.info("Data received: %s", data)
-    #     logger.info("Namespace: %s", namespace)
-    #     namespace = namespace or "/"
-    #     res = self._get_event_handler(data[0], namespace, sid)
-    #     # self._validate_arguments(res[0], data)
-    #     # logger.info("Result: %s", res[0].__annotations__["data"](sender_id=3213))
-    #
-    #     await super()._handle_event(sid, namespace, id, data)
+    async def emit_error_event(self, to_sid, status: SocketioErrorStatusEnum, event_name: str, error_msg: str, data):
+        await self.emit(
+            event=SocketioEventsEnum.error, to=to_sid, data={
+                "status": status,
+                "event_name": event_name,
+                "error": error_msg,
+                "event_data": data,
+            }
+        )
 
-    # async def _trigger_event(self, event, *args, **kwargs):
-    #     """Invoke an event handler."""
-    #     run_async = kwargs.pop('run_async', False)
-    #     logger.info("Triggered")
-    #     ret = None
-    #     if event in self.handlers:
-    #         logger.info("AS: %s", type(args[0]))
-    #         if asyncio.iscoroutinefunction(self.handlers[event]):
-    #             async def run_async_handler():
-    #                 try:
-    #                     if args and isinstance(args[0], dict):
-    #                         body = self.handlers[event].__annotations__.values()[0]
-    #                         return await self.handlers[event](body(**args[0]))
-    #                     else:
-    #                         return await self.handlers[event](*args)
-    #                 except asyncio.CancelledError:  # pragma: no cover
-    #                     pass
-    #                 except Exception:
-    #                     self.logger.exception(event + ' async handler error')
-    #                     if event == 'connect':
-    #                         # if connect handler raised error we reject the
-    #                         # connection
-    #                         return False
-    #
-    #             if run_async:
-    #                 ret = self.start_background_task(run_async_handler)
-    #                 task_reference_holder.add(ret)
-    #                 ret.add_done_callback(task_reference_holder.discard)
-    #             else:
-    #                 ret = await run_async_handler()
-    #         else:
-    #             async def run_sync_handler():
-    #                 try:
-    #                     return self.handlers[event](*args)
-    #                 except Exception:
-    #                     self.logger.exception(event + ' handler error')
-    #                     if event == 'connect':
-    #                         # if connect handler raised error we reject the
-    #                         # connection
-    #                         return False
-    #
-    #             if run_async:
-    #                 ret = self.start_background_task(run_sync_handler)
-    #                 task_reference_holder.add(ret)
-    #                 ret.add_done_callback(task_reference_holder.discard)
-    #             else:
-    #                 ret = await run_sync_handler()
-    #     return ret
-    #
-    # def _validate_arguments(self, handler, data):
-    #     params = handler.__annotations__
-    #     for key in params:
-    #         if isinstance(params[key], BaseModel):
-    #             if isinstance(data, dict):
-    #                 params[key](**data)
+    async def _handle_event_internal(self, server, sid, eio_sid, data,
+                                     namespace, id):
+        try:
+            cls = self._get_handler_params_type(data[0], namespace, sid)
+            assert len(data) == 2
+            r = await server._trigger_event(data[0], namespace, sid, cls(**data[1]))
+        except ValidationError as err:
+            logger.error("Validation error. data=%s, err=%s", data, err)
+            await self.emit_error_event(
+                status=SocketioErrorStatusEnum.invalid_data,
+                to_sid=sid,
+                event_name=data[0],
+                error_msg=str(err),
+                data=data,
+            )
+            return
+        except AssertionError:
+            logger.error("Too many arguments given. data=%s", data)
+            await self.emit_error_event(
+                status=SocketioErrorStatusEnum.invalid_data,
+                to_sid=sid,
+                event_name=data[0],
+                error_msg=str("Too many arguments given."),
+                data=data,
+            )
+            return
+        except Exception:
+            await self.emit_error_event(
+                status=SocketioErrorStatusEnum.server_error,
+                to_sid=sid,
+                event_name=data[0],
+                error_msg=str("Server error occured."),
+                data=data,
+            )
+            raise
+
+        if r != self.not_handled and id is not None:
+            # send ACK packet with the response returned by the handler
+            # tuples are expanded as multiple arguments
+            if r is None:
+                data = []
+            elif isinstance(r, tuple):
+                data = list(r)
+            else:
+                data = [r]
+            await server._send_packet(eio_sid, self.packet_class(
+                packet.ACK, namespace=namespace, id=id, data=data))
+
+    def _get_handler_params_type(self, event_name, namespace, sid):
+        """
+        Возвращает класс параметра функции обработчика события с event_name.
+        """
+        handler = self._get_event_handler(event_name, namespace, sid)[0]
+        params = handler.__annotations__
+        return list(params.values())[0]
 
 
 sio = SocketIOClient()
@@ -100,15 +104,16 @@ asio_app = socketio.ASGIApp(socketio_server=sio, socketio_path="socks")
 
 
 @sio.event
-async def connect(sid, environ, auth):
+async def connect(sid, environ, _):
     try:
         session = await check_access_token(auth_data=environ["HTTP_AUTHORIZATION"])
     except HTTPException:
         logger.error("Invalid token.")
         await sio.disconnect(sid)
         return
-    with sio.session(sid) as io_session:
+    async with sio.session(sid) as io_session:
         io_session["user_id"] = session.user_id
+    sio.users[session.user_id] = sid
     logger.info("Socketio connected. params=%s", {"sid": sid, "user_id": session.user_id})
 
 
