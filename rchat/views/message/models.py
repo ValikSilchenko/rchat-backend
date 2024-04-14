@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import StrEnum
 
 from pydantic import BaseModel, UUID4, UUID5
 
@@ -62,4 +63,10 @@ class MessageResponse(BaseModel):
 
 class ChatMessagesResponse(BaseModel):
     messages: list[MessageResponse]
+
+
+class NewMessageEventStatusEnum(StrEnum):
+    user_not_found = "user_not_found"
+    chat_not_found = "chat_not_found"
+    no_message_sender_provided = "no_message_sender_provided"
 

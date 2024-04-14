@@ -5,14 +5,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import ValidationError, UUID4
 from starlette import status
 
-from rchat.clients.socketio_client import sio, SocketioEventsEnum
+from rchat.clients.socketio_client import sio, SocketioEventsEnum, SocketioErrorStatusEnum
 from rchat.schemas.models import ChatTypeEnum, MessageTypeEnum, Session
 from rchat.repository.message import MessageCreate
 from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
 from rchat.views.message.helpers import get_message_sender
 from rchat.views.message.models import CreateMessageBody, MessageResponse, MessageSender, ChatMessagesResponse, \
-    ForeignMessage
+    ForeignMessage, NewMessageEventStatusEnum
 
 logger = logging.getLogger(__name__)
 
@@ -86,24 +86,34 @@ async def get_chat_messages(
     return ChatMessagesResponse(messages=response_messages)
 
 
-@sio.on("_new_message_")
-async def handle_new_message(sid, data: dict, *args):
+@sio.on(SocketioEventsEnum.new_message)
+async def handle_new_message(sid, message_body: CreateMessageBody):
     """
     Метод обработки нового сообщения от пользователей.
 
     Если сообщение написано пользователю, с которым у отправителя нету чата,
     То создаётся чат и оба пользователя добавляются как участники чата.
     """
-    try:
-        message_body = CreateMessageBody(**data)
-    except ValidationError:
-        return
-
     async with sio.session(sid) as io_session:
         sender_user = await app_state.user_repo.get_by_id(id_=io_session["user_id"])
 
     if message_body.other_user_public_id:
-        other_user = await app_state.user_repo.get_by_public_id(message_body.other_user_public_id)  # TODO Добавить обработку ошибки
+        other_user = await app_state.user_repo.get_by_public_id(message_body.other_user_public_id)
+        if not other_user:
+            logger.error(
+                "Other user not found."
+                " other_user_public_id=%s, sender_user_id=%s",
+                message_body.other_user_public_id,
+                sender_user.id,
+            )
+            await sio.emit_error_event(
+                to_sid=sid,
+                status=SocketioErrorStatusEnum.invalid_data,
+                event_name=SocketioEventsEnum.new_message,
+                error_msg=NewMessageEventStatusEnum.user_not_found,
+                data=message_body.model_dump()
+            )
+            return
 
         chat = await app_state.chat_repo.get_private_chat_with_users(
             users_id_list=[sender_user.id, other_user.id]
@@ -112,11 +122,35 @@ async def handle_new_message(sid, data: dict, *args):
             chat = await app_state.chat_repo.create_chat(chat_type=ChatTypeEnum.private)
             await app_state.chat_repo.add_chat_participant(chat_id=chat.id, user_id=sender_user.id)
             await app_state.chat_repo.add_chat_participant(chat_id=chat.id, user_id=other_user.id)
-
     elif message_body.chat_id:
-        chat = await app_state.chat_repo.get_by_id(chat_id=message_body.chat_id)  # TODO Добавить обработку ошибки
+        chat = await app_state.chat_repo.get_by_id(chat_id=message_body.chat_id)
+        if not chat:
+            logger.error(
+                "Chat not found. chat_id=%s, sender_user_id=%s",
+                message_body.chat_id,
+                sender_user.id,
+            )
+            await sio.emit_error_event(
+                to_sid=sid,
+                status=SocketioErrorStatusEnum.invalid_data,
+                event_name=SocketioEventsEnum.new_message,
+                error_msg=NewMessageEventStatusEnum.chat_not_found,
+                data=message_body.model_dump()
+            )
+            return
     else:
-        return  # TODO Добавить обработку ошибки
+        logger.error(
+            "No sender were provided. sender_user_id=%s",
+            sender_user.id,
+        )
+        await sio.emit_error_event(
+            to_sid=sid,
+            status=SocketioErrorStatusEnum.invalid_data,
+            event_name=SocketioEventsEnum.new_message,
+            error_msg=NewMessageEventStatusEnum.no_message_sender_provided,
+            data=message_body.model_dump()
+        )
+        return
 
     message = await app_state.message_repo.create_message(
         message=MessageCreate(
