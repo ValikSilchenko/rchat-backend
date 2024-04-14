@@ -50,7 +50,7 @@ class MessageRepository:
         sql = """
             select * from "message"
             where "chat_id" = $1 and "order_id" > $2
-            order by "created_timestamp" desc limit $3
+            order by "created_timestamp" limit $3
         """
         async with self._db.acquire() as c:
             rows = await c.fetch(sql, chat_id, last_order_id, limit)
@@ -82,7 +82,6 @@ class MessageRepository:
                 select max("created_timestamp") from "message" m2
                 where m2."chat_id" = $1
             )
-            order by "created_timestamp" desc
         """
         async with self._db.acquire() as c:
             row = await c.fetchrow(sql, chat_id)

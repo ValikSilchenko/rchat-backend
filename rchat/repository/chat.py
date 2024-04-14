@@ -68,9 +68,26 @@ class ChatRepository:
 
     async def get_user_chats(self, user_id: UUID5) -> list[Chat]:
         sql = """
-            select *, "chat"."created_timestamp" as created_timestamp from "chat"
+            select
+                "chat"."id",
+                "chat"."type",
+                "chat"."name",
+                "chat"."avatar_photo_id",
+                "chat"."description",
+                "chat"."created_timestamp",
+                max(m."created_timestamp") as last_message_timestamp
+            from "chat"
             left join "chat_user" on "chat"."id" = "chat_user"."chat_id"
+            left join "message" m on "chat"."id" = m."chat_id"
             where "user_id" = $1
+            group by
+                "chat"."id",
+                "chat"."type",
+                "chat"."name",
+                "chat"."avatar_photo_id",
+                "chat"."description",
+                "chat"."created_timestamp"
+            order by last_message_timestamp desc
         """
         async with self._db.acquire() as c:
             rows = await c.fetch(sql, user_id)
