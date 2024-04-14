@@ -57,11 +57,38 @@ class ChatRepository:
 
         return Chat(**dict(row))
 
-    async def get_chat_participants(self, chat_id: UUID4) -> list[ChatParticipant]:
+    async def get_chat_participant_users(self, chat_id: UUID4) -> list[UUID5]:
         sql = """
-            select * from "chat_user" where "chat_id" = $1
+            select "user_id" from "chat_user" where "chat_id" = $1
         """
         async with self._db.acquire() as c:
             rows = await c.fetch(sql, chat_id)
 
-        return [ChatParticipant(**dict(row)) for row in rows]
+        return [UUID5(str(row["user_id"])) for row in rows]
+
+    async def get_user_chats(self, user_id: UUID5) -> list[Chat]:
+        sql = """
+            select *, "chat"."created_timestamp" as created_timestamp from "chat"
+            left join "chat_user" on "chat"."id" = "chat_user"."chat_id"
+            where "user_id" = $1
+        """
+        async with self._db.acquire() as c:
+            rows = await c.fetch(sql, user_id)
+
+        return [Chat(**dict(row)) for row in rows]
+
+    async def get_user_chat_list(self, user_id: UUID5) -> list[UUID4]:
+        sql = """
+            select * from "chat"
+            left join "chat_user" on "chat"."id" = "chat_user"."chat_id"
+            left join "message" on "message"."chat_id" = "chat"."id"
+            where "user_id" = $1 and "message"."created_timestamp" = (
+                select max(m2.created_timestamp) from "message" m2
+                where m2."chat_id" = "chat"."id"
+            )
+            order by "message"."created_timestamp"
+        """
+        async with self._db.acquire() as c:
+            rows = await c.fetch(sql, user_id)
+
+        return [int(row["id"]) for row in rows]

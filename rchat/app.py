@@ -15,6 +15,7 @@ from rchat.state import app_state
 from rchat.views.auth.views import router as auth_router
 from rchat.views.message.views import router as message_router
 from rchat.views.user.views import router as user_router
+from rchat.views.chat.views import router as chat_router
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -34,6 +35,7 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(message_router)
+app.include_router(chat_router)
 
 app.mount(path="/", app=asio_app)
 

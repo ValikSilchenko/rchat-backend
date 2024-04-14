@@ -70,7 +70,7 @@ class UserRepository:
         return User(**dict(row))
 
     async def create(
-        self, public_id: str, password: str, email: str
+        self, first_name: str, public_id: str, password: str, email: str
     ) -> Optional[User]:
         """
         Создаёт нового пользователя в базе.
@@ -85,14 +85,25 @@ class UserRepository:
         ).hexdigest()
         sql = """
             insert into "user" (
-                "id", "public_id", "password", "email", "user_salt"
-            ) values ($1, $2, $3, $4, $5)
+                "id",
+                "first_name",
+                "public_id",
+                "password",
+                "email",
+                "user_salt"
+            ) values ($1, $2, $3, $4, $5, $6)
             on conflict do nothing
             returning *
         """
         async with self._db.acquire() as c:
             row = await c.fetchrow(
-                sql, user_id, public_id, encrypted_password, email, user_salt
+                sql,
+                user_id,
+                first_name,
+                public_id,
+                encrypted_password,
+                email,
+                user_salt,
             )
 
         if not row:
