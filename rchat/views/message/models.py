@@ -1,15 +1,16 @@
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, UUID4, UUID5
+from pydantic import UUID4, UUID5, BaseModel
 
-from rchat.schemas.models import Message, MessageTypeEnum
+from rchat.schemas.models import MessageTypeEnum
 
 
 class CreateMessageBody(BaseModel):
     """
     Модель для запроса создания сообщения.
     """
+
     chat_id: UUID4 | None = None
     other_user_public_id: str | None = None
     message_text: str | None = None
@@ -26,6 +27,7 @@ class MessageSender(BaseModel):
      - пользователем (chat_id = None),
      - чатом (user_id = None).
     """
+
     user_id: UUID5 | None = None
     chat_id: UUID4 | None = None
     name: str
@@ -36,6 +38,7 @@ class ForeignMessage(BaseModel):
     """
     Модель пересланного сообщения или отвеченного сообщения.
     """
+
     id: UUID4
     type: MessageTypeEnum
     message_text: str | None = None
@@ -46,6 +49,7 @@ class MessageResponse(BaseModel):
     """
     Модель сообщения для метода получения списка сообщения.
     """
+
     id: UUID4
     type: MessageTypeEnum
     chat_id: UUID4
@@ -69,4 +73,3 @@ class NewMessageEventStatusEnum(StrEnum):
     user_not_found = "user_not_found"
     chat_not_found = "chat_not_found"
     no_message_sender_provided = "no_message_sender_provided"
-

@@ -2,17 +2,26 @@ import logging
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import ValidationError, UUID4
+from pydantic import UUID4
 from starlette import status
 
-from rchat.clients.socketio_client import sio, SocketioEventsEnum, SocketioErrorStatusEnum
-from rchat.schemas.models import ChatTypeEnum, MessageTypeEnum, Session
+from rchat.clients.socketio_client import (
+    SocketioErrorStatusEnum,
+    SocketioEventsEnum,
+    sio,
+)
 from rchat.repository.message import MessageCreate
+from rchat.schemas.models import ChatTypeEnum, MessageTypeEnum, Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
 from rchat.views.message.helpers import get_message_sender
-from rchat.views.message.models import CreateMessageBody, MessageResponse, MessageSender, ChatMessagesResponse, \
-    ForeignMessage, NewMessageEventStatusEnum
+from rchat.views.message.models import (
+    ChatMessagesResponse,
+    CreateMessageBody,
+    ForeignMessage,
+    MessageResponse,
+    NewMessageEventStatusEnum,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -21,10 +30,10 @@ router = APIRouter(tags=["Message"])
 
 @router.get(path="/message/list", response_model=ChatMessagesResponse)
 async def get_chat_messages(
-        chat_id: UUID4,
-        limit: int,
-        last_order_id: int = 0,
-        session: Session = Depends(check_access_token),
+    chat_id: UUID4,
+    limit: int,
+    last_order_id: int = 0,
+    session: Session = Depends(check_access_token),
 ):
     """
     Получает список сообщений
@@ -33,7 +42,9 @@ async def get_chat_messages(
 
     Сообщения отсортированы в порядке убывания даты.
     """
-    chat_participants = await app_state.chat_repo.get_chat_participant_users(chat_id)
+    chat_participants = await app_state.chat_repo.get_chat_participant_users(
+        chat_id
+    )
     if session.user_id not in chat_participants:
         logger.error(
             "User not in chat. chat_id=%s, user_id=%s, session=%s",
@@ -41,14 +52,18 @@ async def get_chat_messages(
             session.user_id,
             session.id,
         )
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="user_not_in_chat")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="user_not_in_chat"
+        )
 
     messages = await app_state.message_repo.get_chat_messages(
         chat_id=chat_id, last_order_id=last_order_id, limit=limit
     )
     response_messages = []
     for message in messages:
-        forwarded_msg = await app_state.message_repo.get_by_id(id_=message.forwarded_message)
+        forwarded_msg = await app_state.message_repo.get_by_id(
+            id_=message.forwarded_message
+        )
         if forwarded_msg:
             forwarded_msg_sender = await get_message_sender(forwarded_msg)
             forwarded_message = ForeignMessage(
@@ -60,7 +75,9 @@ async def get_chat_messages(
         else:
             forwarded_message = None
 
-        replied_msg = await app_state.message_repo.get_by_id(id_=message.reply_to_message)
+        replied_msg = await app_state.message_repo.get_by_id(
+            id_=message.reply_to_message
+        )
         if replied_msg:
             replied_msg_sender = await get_message_sender(replied_msg)
             reply_to_message = ForeignMessage(
@@ -75,7 +92,9 @@ async def get_chat_messages(
         message_sender = await get_message_sender(message)
         response_messages.append(
             MessageResponse(
-                **message.model_dump(exclude={"forwarded_message", "reply_to_message"}),
+                **message.model_dump(
+                    exclude={"forwarded_message", "reply_to_message"}
+                ),
                 forwarded_message=forwarded_message,
                 reply_to_message=reply_to_message,
                 sender=message_sender,
@@ -95,10 +114,14 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
     То создаётся чат и оба пользователя добавляются как участники чата.
     """
     async with sio.session(sid) as io_session:
-        sender_user = await app_state.user_repo.get_by_id(id_=io_session["user_id"])
+        sender_user = await app_state.user_repo.get_by_id(
+            id_=io_session["user_id"]
+        )
 
     if message_body.other_user_public_id:
-        other_user = await app_state.user_repo.get_by_public_id(message_body.other_user_public_id)
+        other_user = await app_state.user_repo.get_by_public_id(
+            message_body.other_user_public_id
+        )
         if not other_user:
             logger.error(
                 "Other user not found."
@@ -111,7 +134,7 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
                 status=SocketioErrorStatusEnum.invalid_data,
                 event_name=SocketioEventsEnum.new_message,
                 error_msg=NewMessageEventStatusEnum.user_not_found,
-                data=message_body.model_dump()
+                data=message_body.model_dump(),
             )
             return
 
@@ -119,11 +142,19 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
             users_id_list=[sender_user.id, other_user.id]
         )
         if not chat:
-            chat = await app_state.chat_repo.create_chat(chat_type=ChatTypeEnum.private)
-            await app_state.chat_repo.add_chat_participant(chat_id=chat.id, user_id=sender_user.id)
-            await app_state.chat_repo.add_chat_participant(chat_id=chat.id, user_id=other_user.id)
+            chat = await app_state.chat_repo.create_chat(
+                chat_type=ChatTypeEnum.private
+            )
+            await app_state.chat_repo.add_chat_participant(
+                chat_id=chat.id, user_id=sender_user.id
+            )
+            await app_state.chat_repo.add_chat_participant(
+                chat_id=chat.id, user_id=other_user.id
+            )
     elif message_body.chat_id:
-        chat = await app_state.chat_repo.get_by_id(chat_id=message_body.chat_id)
+        chat = await app_state.chat_repo.get_by_id(
+            chat_id=message_body.chat_id
+        )
         if not chat:
             logger.error(
                 "Chat not found. chat_id=%s, sender_user_id=%s",
@@ -135,7 +166,7 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
                 status=SocketioErrorStatusEnum.invalid_data,
                 event_name=SocketioEventsEnum.new_message,
                 error_msg=NewMessageEventStatusEnum.chat_not_found,
-                data=message_body.model_dump()
+                data=message_body.model_dump(),
             )
             return
     else:
@@ -148,7 +179,7 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
             status=SocketioErrorStatusEnum.invalid_data,
             event_name=SocketioEventsEnum.new_message,
             error_msg=NewMessageEventStatusEnum.no_message_sender_provided,
-            data=message_body.model_dump()
+            data=message_body.model_dump(),
         )
         return
 
@@ -161,7 +192,9 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
             sender_user_id=sender_user.id,
         )
     )
-    chat_participants = await app_state.chat_repo.get_chat_participant_users(chat_id=chat.id)
+    chat_participants = await app_state.chat_repo.get_chat_participant_users(
+        chat_id=chat.id
+    )
 
     message_response = MessageResponse(
         **message.model_dump(),

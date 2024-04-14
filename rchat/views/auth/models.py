@@ -25,7 +25,9 @@ class UserDataPatternEnum(StrEnum):
 
 class CreateUserData(BaseModel):
     first_name: str = Field(min_length=3, max_length=32)
-    public_id: str = Field(min_length=4, max_length=32, pattern=UserDataPatternEnum.public_id)
+    public_id: str = Field(
+        min_length=4, max_length=32, pattern=UserDataPatternEnum.public_id
+    )
     password: str = Field(min_length=7, max_length=64)
     email: EmailStr = Field(max_length=64)
 

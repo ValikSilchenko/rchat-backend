@@ -32,22 +32,34 @@ class SocketIOClient(socketio.AsyncServer):
         )
         self.users = {}
 
-    async def emit_error_event(self, to_sid, status: SocketioErrorStatusEnum, event_name: str, error_msg: str, data):
+    async def emit_error_event(
+        self,
+        to_sid,
+        status: SocketioErrorStatusEnum,
+        event_name: str,
+        error_msg: str,
+        data,
+    ):
         await self.emit(
-            event=SocketioEventsEnum.error, to=to_sid, data={
+            event=SocketioEventsEnum.error,
+            to=to_sid,
+            data={
                 "status": status,
                 "event_name": event_name,
                 "error": error_msg,
                 "event_data": data,
-            }
+            },
         )
 
-    async def _handle_event_internal(self, server, sid, eio_sid, data,
-                                     namespace, id):
+    async def _handle_event_internal(
+        self, server, sid, eio_sid, data, namespace, id
+    ):
         try:
             cls = self._get_handler_params_type(data[0], namespace, sid)
             assert len(data) == 2
-            r = await server._trigger_event(data[0], namespace, sid, cls(**data[1]))
+            r = await server._trigger_event(
+                data[0], namespace, sid, cls(**data[1])
+            )
         except ValidationError as err:
             logger.error("Validation error. data=%s, err=%s", data, err)
             await self.emit_error_event(
@@ -87,8 +99,12 @@ class SocketIOClient(socketio.AsyncServer):
                 data = list(r)
             else:
                 data = [r]
-            await server._send_packet(eio_sid, self.packet_class(
-                packet.ACK, namespace=namespace, id=id, data=data))
+            await server._send_packet(
+                eio_sid,
+                self.packet_class(
+                    packet.ACK, namespace=namespace, id=id, data=data
+                ),
+            )
 
     def _get_handler_params_type(self, event_name, namespace, sid):
         """
@@ -106,7 +122,9 @@ asio_app = socketio.ASGIApp(socketio_server=sio, socketio_path="socks")
 @sio.event
 async def connect(sid, environ, _):
     try:
-        session = await check_access_token(auth_data=environ["HTTP_AUTHORIZATION"])
+        session = await check_access_token(
+            auth_data=environ["HTTP_AUTHORIZATION"]
+        )
     except HTTPException:
         logger.error("Invalid token.")
         await sio.disconnect(sid)
@@ -114,7 +132,10 @@ async def connect(sid, environ, _):
     async with sio.session(sid) as io_session:
         io_session["user_id"] = session.user_id
     sio.users[session.user_id] = sid
-    logger.info("Socketio connected. params=%s", {"sid": sid, "user_id": session.user_id})
+    logger.info(
+        "Socketio connected. params=%s",
+        {"sid": sid, "user_id": session.user_id},
+    )
 
 
 @sio.event

@@ -42,7 +42,7 @@ class MessageRepository:
         return Message(**dict(row))
 
     async def get_chat_messages(
-            self, chat_id: UUID4, last_order_id: int, limit: int
+        self, chat_id: UUID4, last_order_id: int, limit: int
     ) -> list[Message]:
         """
         Получает список сообщений чата отсортированных по дате создания.
@@ -73,9 +73,7 @@ class MessageRepository:
 
         return Message(**dict(row))
 
-    async def get_last_chat_message(
-            self, chat_id: UUID4
-    ) -> Optional[Message]:
+    async def get_last_chat_message(self, chat_id: UUID4) -> Optional[Message]:
         sql = """
             select * from "message" m1
             where "chat_id" = $1 and "created_timestamp" = (

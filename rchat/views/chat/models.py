@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, UUID4
+from pydantic import UUID4, BaseModel
 
 from rchat.schemas.models import ChatTypeEnum, MessageTypeEnum
 from rchat.views.message.models import MessageSender
@@ -10,6 +10,7 @@ class LastChatMessage(BaseModel):
     """
     Модель последнего сообщения в чате.
     """
+
     id: UUID4
     message_type: MessageTypeEnum
     message_text: str | None
@@ -21,6 +22,7 @@ class ChatListItem(BaseModel):
     """
     Элемент списка чатов для метода получения чатов пользователя.
     """
+
     id: UUID4
     name: str
     type: ChatTypeEnum

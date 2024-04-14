@@ -21,10 +21,10 @@ class ChatRepository:
         self._db = db
 
     async def create_chat(
-            self,
-            chat_type: str,
-            chat_name: str | None = None,
-            description: str | None = None,
+        self,
+        chat_type: str,
+        chat_name: str | None = None,
+        description: str | None = None,
     ) -> Chat:
         """
         Создаёт чат в БД.
@@ -36,7 +36,9 @@ class ChatRepository:
             returning *
         """
         async with self._db.acquire() as c:
-            row = await c.fetchrow(sql, chat_id, chat_type, chat_name, description)
+            row = await c.fetchrow(
+                sql, chat_id, chat_type, chat_name, description
+            )
 
         return Chat(**dict(row))
 
@@ -44,7 +46,7 @@ class ChatRepository:
         """
         Добавляет пользователя в чат как участника.
         """
-        sql = f"""
+        sql = """
             insert into "chat_user" (chat_id, user_id)
             values ($1, $2)
         """
@@ -110,7 +112,9 @@ class ChatRepository:
 
         return [Chat(**dict(row)) for row in rows]
 
-    async def get_private_chat_with_users(self, users_id_list: list[UUID5]) -> Optional[Chat]:
+    async def get_private_chat_with_users(
+        self, users_id_list: list[UUID5]
+    ) -> Optional[Chat]:
         """
         Получает чат типа private по его участникам, если такой есть.
         """
@@ -125,7 +129,7 @@ class ChatRepository:
             from "chat_user" cu1
                 left join "chat_user" cu2 on cu1."chat_id" = cu2."chat_id"
                 left join "chat" c on c."id" = cu1."chat_id"
-            where 
+            where
                 cu1."user_id" != cu2."user_id"
                 and cu1."user_id" = any($1) and cu2."user_id" = any($1)
                 and c."type" = '{ChatTypeEnum.private}'
