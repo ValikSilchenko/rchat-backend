@@ -6,6 +6,9 @@ from rchat.schemas.models import Message, MessageTypeEnum
 
 
 class CreateMessageBody(BaseModel):
+    """
+    Модель для запроса создания сообщения.
+    """
     chat_id: UUID4 | None = None
     other_user_public_id: str | None = None
     message_text: str | None = None
@@ -15,6 +18,13 @@ class CreateMessageBody(BaseModel):
 
 
 class MessageSender(BaseModel):
+    """
+    Модель отправителя сообщения.
+
+    Отправитель может быть:
+     - пользователем (chat_id = None),
+     - чатом (user_id = None).
+    """
     user_id: UUID5 | None = None
     chat_id: UUID4 | None = None
     name: str
@@ -22,6 +32,9 @@ class MessageSender(BaseModel):
 
 
 class ForeignMessage(BaseModel):
+    """
+    Модель пересланного сообщения или отвеченного сообщения.
+    """
     id: UUID4
     type: MessageTypeEnum
     message_text: str | None = None
@@ -29,6 +42,9 @@ class ForeignMessage(BaseModel):
 
 
 class MessageResponse(BaseModel):
+    """
+    Модель сообщения для метода получения списка сообщения.
+    """
     id: UUID4
     type: MessageTypeEnum
     chat_id: UUID4

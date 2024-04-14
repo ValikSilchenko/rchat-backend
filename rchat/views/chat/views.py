@@ -12,6 +12,10 @@ router = APIRouter(tags=["Chat"])
 
 @router.get(path="/chat/list", response_model=ChatListResponse)
 async def get_chat_list(session: Session = Depends(check_access_token)):
+    """
+    Получает список чатов пользователя,
+    отсортированный по времени последнего сообщения в чатах.
+    """
     user_chats = await app_state.chat_repo.get_user_chats(
         user_id=session.user_id
     )

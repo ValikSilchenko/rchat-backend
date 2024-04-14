@@ -3,7 +3,7 @@ from rchat.state import app_state
 from rchat.views.message.models import MessageSender
 
 
-async def get_message_sender(message: Message):
+async def get_message_sender(message: Message) -> MessageSender:
     """
     Возвращает модель отправителя сообщения для возврата через api.
     """

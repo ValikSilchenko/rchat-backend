@@ -5,6 +5,11 @@ from rchat.state import app_state
 
 
 async def get_chat_name(chat: Chat, user_id: UUID5) -> str:
+    """
+    Вспомогательный метод для получения имени чата.
+     - Для чата типа private название чата - first_name другого пользователя.
+     - Для остальных чатов - chat.name.
+    """
     if chat.type == ChatTypeEnum.private:
         chat_participant = await app_state.chat_repo.get_chat_participant_users(
             chat_id=chat.id

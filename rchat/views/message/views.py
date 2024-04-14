@@ -26,6 +26,13 @@ async def get_chat_messages(
         last_order_id: int = 0,
         session: Session = Depends(check_access_token),
 ):
+    """
+    Получает список сообщений
+    с информацией о пересланных и отвеченных сообщениях,
+    а также отправителях этих сообщений и главного сообщения.
+
+    Сообщения отсортированы в порядке убывания даты.
+    """
     chat_participants = await app_state.chat_repo.get_chat_participant_users(chat_id)
     if session.user_id not in chat_participants:
         logger.error(
@@ -81,6 +88,12 @@ async def get_chat_messages(
 
 @sio.on("_new_message_")
 async def handle_new_message(sid, data: dict, *args):
+    """
+    Метод обработки нового сообщения от пользователей.
+
+    Если сообщение написано пользователю, с которым у отправителя нету чата,
+    То создаётся чат и оба пользователя добавляются как участники чата.
+    """
     try:
         message_body = CreateMessageBody(**data)
     except ValidationError:
