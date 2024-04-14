@@ -7,9 +7,8 @@ from rchat.schemas.models import Message, MessageTypeEnum
 
 class CreateMessageBody(BaseModel):
     chat_id: UUID4 | None = None
-    user_public_id: str | None = None
+    other_user_public_id: str | None = None
     message_text: str | None = None
-    sender_user_id: UUID5 | None = None
     reply_to_message_id: UUID4 | None = None
     forwarded_message_id: UUID4 | None = None
     is_silent: bool = False

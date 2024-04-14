@@ -5,7 +5,7 @@ from typing import Optional
 from asyncpg import Pool
 from pydantic import UUID4, UUID5, BaseModel
 
-from rchat.schemas.models import Chat
+from rchat.schemas.models import Chat, ChatTypeEnum
 
 
 class ChatParticipant(BaseModel):
@@ -92,3 +92,27 @@ class ChatRepository:
             rows = await c.fetch(sql, user_id)
 
         return [int(row["id"]) for row in rows]
+
+    async def get_private_chat_with_users(self, users_id_list: list[UUID5]) -> Optional[Chat]:
+        sql = f"""
+            select 
+                c.id,
+                c.type,
+                c.name,
+                c.avatar_photo_id,
+                c.description,
+                c.created_timestamp
+            from "chat_user" cu1
+            left join "chat_user" cu2
+            on cu1."chat_id" = cu2."chat_id"
+            left join "chat" c on c."id" = cu1."chat_id"
+            where cu1."user_id" = any($1) and cu2."user_id" = any($1)
+            and c."type" = '{ChatTypeEnum.private}'
+        """
+        async with self._db.acquire() as c:
+            row = await c.fetchrow(sql, users_id_list)
+
+        if not row:
+            return
+
+        return Chat(**dict(row))
