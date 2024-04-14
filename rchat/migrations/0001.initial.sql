@@ -12,7 +12,7 @@ create table "user" (
     password varchar(64) not null,
     email varchar(64) not null,
     user_salt varchar(32) not null,
-    first_name varchar(32),
+    first_name varchar(32) not null,
     last_name varchar(32),
     avatar_photo_id uuid references "media" ("id"),
     profile_status varchar(64),
