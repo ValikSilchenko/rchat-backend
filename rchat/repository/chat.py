@@ -26,6 +26,9 @@ class ChatRepository:
             chat_name: str | None = None,
             description: str | None = None,
     ) -> Chat:
+        """
+        Создаёт чат в БД.
+        """
         chat_id = uuid.uuid4()
         sql = """
             insert into "chat" (id, type, name, description)
@@ -38,6 +41,9 @@ class ChatRepository:
         return Chat(**dict(row))
 
     async def add_chat_participant(self, chat_id: UUID4, user_id: UUID5):
+        """
+        Добавляет пользователя в чат как участника.
+        """
         sql = f"""
             insert into "chat_user" (chat_id, user_id)
             values ($1, $2)
@@ -46,6 +52,9 @@ class ChatRepository:
             await c.execute(sql, chat_id, user_id)
 
     async def get_by_id(self, chat_id: UUID4) -> Optional[Chat]:
+        """
+        Получает чат по его id, если такой есть.
+        """
         sql = """
             select * from "chat" where "id" = $1
         """
@@ -58,6 +67,9 @@ class ChatRepository:
         return Chat(**dict(row))
 
     async def get_chat_participant_users(self, chat_id: UUID4) -> list[UUID5]:
+        """
+        получает список id пользователей чата.
+        """
         sql = """
             select "user_id" from "chat_user" where "chat_id" = $1
         """
@@ -67,6 +79,10 @@ class ChatRepository:
         return [UUID5(str(row["user_id"])) for row in rows]
 
     async def get_user_chats(self, user_id: UUID5) -> list[Chat]:
+        """
+        Получает список чатов пользователя,
+        отсортированных по времени последнего сообщения в этих чатах.
+        """
         sql = """
             select
                 "chat"."id",
@@ -94,23 +110,10 @@ class ChatRepository:
 
         return [Chat(**dict(row)) for row in rows]
 
-    async def get_user_chat_list(self, user_id: UUID5) -> list[UUID4]:
-        sql = """
-            select * from "chat"
-            left join "chat_user" on "chat"."id" = "chat_user"."chat_id"
-            left join "message" on "message"."chat_id" = "chat"."id"
-            where "user_id" = $1 and "message"."created_timestamp" = (
-                select max(m2.created_timestamp) from "message" m2
-                where m2."chat_id" = "chat"."id"
-            )
-            order by "message"."created_timestamp"
-        """
-        async with self._db.acquire() as c:
-            rows = await c.fetch(sql, user_id)
-
-        return [int(row["id"]) for row in rows]
-
     async def get_private_chat_with_users(self, users_id_list: list[UUID5]) -> Optional[Chat]:
+        """
+        Получает чат типа private по его участникам, если такой есть.
+        """
         sql = f"""
             select distinct
                 c.id,
