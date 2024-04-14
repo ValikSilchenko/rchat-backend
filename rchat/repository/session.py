@@ -12,7 +12,6 @@ class SessionCreate(BaseModel):
     id: UUID4
     user_id: UUID5
     ip: str | None = None
-    country: str | None = None
     user_agent: str | None
     is_active: bool
 
@@ -40,7 +39,6 @@ class SessionRepository:
             user_id=user_id,
             ip=ip,
             user_agent=user_agent,
-            country=None,
             is_active=True,
         )
         sql_build = build_model(model=session_data, exclude_none=True)
