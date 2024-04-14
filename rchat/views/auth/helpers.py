@@ -42,8 +42,9 @@ def generate_tokens(session: Session, user_public_id: str) -> dict[str, str]:
     :return: Словарь вида {access_token: ..., refresh_token: ...}
     """
     access_payload = {
-        "session": session.id.hex,
+        "session": str(session.id),
         "public_id": user_public_id,
+        "user_id": str(session.user_id),
         "exp": session.created_timestamp
         + timedelta(minutes=SESSION_LIFETIME_MIN),
         "token_type": "access",

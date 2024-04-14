@@ -1,11 +1,9 @@
 import uuid
-from datetime import datetime, timedelta
 from typing import Optional
 
 from asyncpg import Pool
 from pydantic import UUID4, UUID5, BaseModel
 
-from rchat.conf import SESSION_LIFETIME_MIN
 from rchat.repository.helpers import build_model
 from rchat.schemas.models import Session
 
@@ -17,7 +15,6 @@ class SessionCreate(BaseModel):
     country: str | None = None
     user_agent: str | None
     is_active: bool
-    expired_at: datetime
 
 
 class SessionRepository:
@@ -45,8 +42,6 @@ class SessionRepository:
             user_agent=user_agent,
             country=None,
             is_active=True,
-            expired_at=datetime.now()
-            + timedelta(minutes=SESSION_LIFETIME_MIN),
         )
         sql_build = build_model(model=session_data, exclude_none=True)
         sql = f"""

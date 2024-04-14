@@ -82,6 +82,7 @@ async def create_user(user_data: CreateUserData):
     :param user_data: данные для регистрации пользователя
     """
     user = await app_state.user_repo.create(
+        first_name=user_data.first_name,
         public_id=user_data.public_id,
         password=user_data.password,
         email=user_data.email,
