@@ -52,7 +52,7 @@ class ChatInfo(BaseModel):
 
     id: UUID4
     type: ChatTypeEnum
-    name: str | None
+    name: str | None = None
     avatar_photo_url: str | None
     description: str | None
     created_at: datetime

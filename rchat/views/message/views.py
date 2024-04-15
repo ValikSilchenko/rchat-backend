@@ -220,7 +220,6 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
         chat=ChatInfo(
             id=chat.id,
             type=chat.type,
-            name=await get_chat_name(chat=chat, user_id=sender_user),
             avatar_photo_url=chat_avatar,
             description=chat.description,
             created_at=chat.created_timestamp,
@@ -229,9 +228,11 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
         created_at=message.created_timestamp,
     )
     for participant in chat_participants:
-        logger.info("user_id: %s", participant)
         if participant in sio.users:
-            logger.info("sio: %s", sio.users.get(participant))
+            logger.info("Message sent to user. user_id=%s", participant)
+            message_response.chat.name = await get_chat_name(
+                chat=chat, user_id=participant
+            )
             await sio.emit(
                 event=SocketioEventsEnum.new_message,
                 data=message_response.model_dump_json(),
