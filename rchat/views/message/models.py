@@ -65,7 +65,6 @@ class MessageResponse(BaseModel):
 
     id: UUID4
     type: MessageTypeEnum
-    chat: ChatInfo
     sender: MessageSender
     message_text: str | None = None
     audio_msg_file_link: str | None = None
@@ -80,6 +79,10 @@ class MessageResponse(BaseModel):
 
 class ChatMessagesResponse(BaseModel):
     messages: list[MessageResponse]
+
+
+class NewMessageResponse(MessageResponse):
+    chat: ChatInfo
 
 
 class ChatMessagesStatusEnum(StrEnum):

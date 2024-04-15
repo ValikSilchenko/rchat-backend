@@ -14,6 +14,7 @@ from rchat.repository.message import MessageCreate
 from rchat.schemas.models import ChatTypeEnum, MessageTypeEnum, Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
+from rchat.views.chat.helpers import get_chat_name
 from rchat.views.message.helpers import get_message_sender
 from rchat.views.message.models import (
     ChatInfo,
@@ -23,6 +24,7 @@ from rchat.views.message.models import (
     ForeignMessage,
     MessageResponse,
     NewMessageEventStatusEnum,
+    NewMessageResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -68,11 +70,6 @@ async def get_chat_messages(
             detail=ChatMessagesStatusEnum.user_not_in_chat,
         )
 
-    chat_avatar = (
-        app_state.media_repo.get_media_url(id_=chat.avatar_photo_id)
-        if chat.avatar_photo_id
-        else None
-    )
     messages = await app_state.message_repo.get_chat_messages(
         chat_id=chat_id, last_order_id=last_order_id, limit=limit
     )
@@ -111,11 +108,6 @@ async def get_chat_messages(
             MessageResponse(
                 **message.model_dump(
                     exclude={"forwarded_message", "reply_to_message"}
-                ),
-                chat=ChatInfo(
-                    **chat.model_dump(),
-                    avatar_photo_url=chat_avatar,
-                    created_at=chat.created_timestamp,
                 ),
                 forwarded_message=forwarded_message,
                 reply_to_message=reply_to_message,
@@ -223,11 +215,14 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
         else None
     )
 
-    message_response = MessageResponse(
+    message_response = NewMessageResponse(
         **message.model_dump(),
         chat=ChatInfo(
-            **chat.model_dump(),
+            id=chat.id,
+            type=chat.type,
+            name=await get_chat_name(chat=chat, user_id=sender_user),
             avatar_photo_url=chat_avatar,
+            description=chat.description,
             created_at=chat.created_timestamp,
         ),
         sender=await get_message_sender(message),
