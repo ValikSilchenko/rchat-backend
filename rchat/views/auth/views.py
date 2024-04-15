@@ -2,6 +2,7 @@ import logging
 from hashlib import sha256
 
 from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi.openapi.models import Response
 from starlette import status
 
 from rchat.schemas.models import Session
@@ -9,7 +10,7 @@ from rchat.state import app_state
 from rchat.views.auth.helpers import (
     check_refresh_token,
     generate_tokens,
-    get_login_type,
+    get_login_type, check_access_token,
 )
 from rchat.views.auth.models import (
     AuthBody,
@@ -106,3 +107,11 @@ async def update_tokens(session: Session = Depends(check_refresh_token)):
         session=new_session, user_public_id=user.public_id
     )
     return AuthResponse(**tokens)
+
+
+@router.get(path="/api/check_auth")
+def check_auth(_=Depends(check_access_token)):
+    """
+    Метод проверки аутентификации на nginx.
+    """
+    return Response(status_code=status.HTTP_200_OK)
