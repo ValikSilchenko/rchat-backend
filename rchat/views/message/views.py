@@ -16,7 +16,9 @@ from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
 from rchat.views.message.helpers import get_message_sender
 from rchat.views.message.models import (
+    ChatInfo,
     ChatMessagesResponse,
+    ChatMessagesStatusEnum,
     CreateMessageBody,
     ForeignMessage,
     MessageResponse,
@@ -42,20 +44,35 @@ async def get_chat_messages(
 
     Сообщения отсортированы в порядке убывания даты.
     """
+    chat = await app_state.chat_repo.get_by_id(chat_id)
+    if not chat:
+        logger.error(
+            "Chat not found. chat_id=%s, session=%s", chat_id, session.id
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ChatMessagesStatusEnum.chat_not_found,
+        )
+
     chat_participants = await app_state.chat_repo.get_chat_participant_users(
         chat_id
     )
     if session.user_id not in chat_participants:
         logger.error(
-            "User not in chat. chat_id=%s, user_id=%s, session=%s",
+            "User not in chat. chat_id=%s, session=%s",
             chat_id,
-            session.user_id,
             session.id,
         )
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="user_not_in_chat"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ChatMessagesStatusEnum.user_not_in_chat,
         )
 
+    chat_avatar = (
+        app_state.media_repo.get_media_url(id_=chat.avatar_photo_id)
+        if chat.avatar_photo_id
+        else None
+    )
     messages = await app_state.message_repo.get_chat_messages(
         chat_id=chat_id, last_order_id=last_order_id, limit=limit
     )
@@ -94,6 +111,11 @@ async def get_chat_messages(
             MessageResponse(
                 **message.model_dump(
                     exclude={"forwarded_message", "reply_to_message"}
+                ),
+                chat=ChatInfo(
+                    **chat.model_dump(),
+                    avatar_photo_url=chat_avatar,
+                    created_at=chat.created_timestamp,
                 ),
                 forwarded_message=forwarded_message,
                 reply_to_message=reply_to_message,
@@ -195,9 +217,19 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
     chat_participants = await app_state.chat_repo.get_chat_participant_users(
         chat_id=chat.id
     )
+    chat_avatar = (
+        app_state.media_repo.get_media_url(id_=chat.avatar_photo_id)
+        if chat.avatar_photo_id
+        else None
+    )
 
     message_response = MessageResponse(
         **message.model_dump(),
+        chat=ChatInfo(
+            **chat.model_dump(),
+            avatar_photo_url=chat_avatar,
+            created_at=chat.created_timestamp,
+        ),
         sender=await get_message_sender(message),
         created_at=message.created_timestamp,
     )

@@ -3,7 +3,7 @@ from enum import StrEnum
 
 from pydantic import UUID4, UUID5, BaseModel
 
-from rchat.schemas.models import MessageTypeEnum
+from rchat.schemas.models import ChatTypeEnum, MessageTypeEnum
 
 
 class CreateMessageBody(BaseModel):
@@ -45,6 +45,19 @@ class ForeignMessage(BaseModel):
     sender: MessageSender
 
 
+class ChatInfo(BaseModel):
+    """
+    Модель информации о чате, в котором пришло сообщение.
+    """
+
+    id: UUID4
+    type: ChatTypeEnum
+    name: str | None
+    avatar_photo_url: str | None
+    description: str | None
+    created_at: datetime
+
+
 class MessageResponse(BaseModel):
     """
     Модель сообщения для метода получения списка сообщения.
@@ -52,11 +65,11 @@ class MessageResponse(BaseModel):
 
     id: UUID4
     type: MessageTypeEnum
-    chat_id: UUID4
+    chat: ChatInfo
     sender: MessageSender
     message_text: str | None = None
-    audio_msg_file_link: UUID4 | None = None
-    video_msg_file_link: UUID4 | None = None
+    audio_msg_file_link: str | None = None
+    video_msg_file_link: str | None = None
     reply_to_message: ForeignMessage | None = None
     forwarded_message: ForeignMessage | None = None
     is_silent: bool
@@ -67,6 +80,11 @@ class MessageResponse(BaseModel):
 
 class ChatMessagesResponse(BaseModel):
     messages: list[MessageResponse]
+
+
+class ChatMessagesStatusEnum(StrEnum):
+    chat_not_found = "chat_not_found"
+    user_not_in_chat = "user_not_in_chat"
 
 
 class NewMessageEventStatusEnum(StrEnum):
