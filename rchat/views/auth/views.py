@@ -46,18 +46,29 @@ async def auth(
                 public_id=body.login
             )
         case _:
+            logger.error("Invalid login type. login=%s", body.login)
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     if not user:
+        logger.error(
+            "User not found. login_type=%s, login=%s", login_type, body.login
+        )
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
     encrypted_password = sha256(
         string=(body.password + user.user_salt).encode()
     ).hexdigest()
     if encrypted_password != user.password:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
+    client_ip = None
+    if x_forwarded_for:
+        # получение ip клиента из запроса, прошедшего через прокси
+        client_ip = x_forwarded_for.split(",")[0]
+        await app_state.geoip_repo.get_data_by_ip(ip=client_ip)
+
     session = await app_state.session_repo.create(
-        user_id=user.id, ip=x_forwarded_for, user_agent=user_agent
+        user_id=user.id, ip=client_ip, user_agent=user_agent
     )
 
     tokens = generate_tokens(session=session, user_public_id=user.public_id)
@@ -71,6 +82,7 @@ async def create_user(user_data: CreateUserData):
     :param user_data: данные для регистрации пользователя
     """
     user = await app_state.user_repo.create(
+        first_name=user_data.first_name,
         public_id=user_data.public_id,
         password=user_data.password,
         email=user_data.email,

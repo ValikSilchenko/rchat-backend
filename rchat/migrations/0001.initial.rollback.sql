@@ -1,7 +1,8 @@
+drop table "update";
 drop table "message_attachment";
 drop table "message_read";
-drop table "message";
 drop table "chat_user";
+drop table "message";
 drop table "chat";
 drop table "geoip";
 drop table "session";
