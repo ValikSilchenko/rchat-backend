@@ -16,4 +16,5 @@ services:
     volumes:
       - "/var/lib/registry:/docker_repo"
       - "/auth:/auth"
+      - "/certs:/etc/letsencrypt/live"
 
