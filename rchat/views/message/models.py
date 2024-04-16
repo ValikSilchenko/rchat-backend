@@ -52,7 +52,7 @@ class ChatInfo(BaseModel):
 
     id: UUID4
     type: ChatTypeEnum
-    name: str | None
+    name: str | None = None
     avatar_photo_url: str | None
     description: str | None
     created_at: datetime
@@ -65,7 +65,6 @@ class MessageResponse(BaseModel):
 
     id: UUID4
     type: MessageTypeEnum
-    chat: ChatInfo
     sender: MessageSender
     message_text: str | None = None
     audio_msg_file_link: str | None = None
@@ -80,6 +79,10 @@ class MessageResponse(BaseModel):
 
 class ChatMessagesResponse(BaseModel):
     messages: list[MessageResponse]
+
+
+class NewMessageResponse(MessageResponse):
+    chat: ChatInfo
 
 
 class ChatMessagesStatusEnum(StrEnum):

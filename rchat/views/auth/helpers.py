@@ -9,7 +9,7 @@ from pydantic_core import PydanticCustomError
 from starlette import status
 
 from rchat.conf import REFRESH_LIFETIME_DAYS, SECRET_KEY, SESSION_LIFETIME_MIN
-from rchat.schemas.models import Session
+from rchat.schemas.models import Session, User
 from rchat.state import app_state
 from rchat.views.auth.models import LoginTypeEnum, UserDataPatternEnum
 
@@ -34,17 +34,16 @@ def get_login_type(login: str) -> LoginTypeEnum | None:
         return LoginTypeEnum.public_id
 
 
-def generate_tokens(session: Session, user_public_id: str) -> dict[str, str]:
+def generate_tokens(session: Session, user: User) -> dict[str, str]:
     """
     Создаёт пару токенов доступа для пользователя.
-    :param session: сессия пользователя
-    :param user_public_id: public_id пользователя
     :return: Словарь вида {access_token: ..., refresh_token: ...}
     """
     access_payload = {
         "session": str(session.id),
-        "public_id": user_public_id,
+        "public_id": user.public_id,
         "user_id": str(session.user_id),
+        "first_name": user.first_name,
         "exp": session.created_timestamp
         + timedelta(minutes=SESSION_LIFETIME_MIN),
         "token_type": "access",
