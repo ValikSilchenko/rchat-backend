@@ -2,10 +2,12 @@ version: '3'
 
 services:
   nginx:
-    image: nginx:1.25.4
+    build:
+      dockerfile: Dockerfile
+      context: .
     volumes:
       - "/apps/nginx/www:/var/www"
-      - "/apps/nginx/letsencrypt:/etc/letsencrypt"
+      - "/etc/letsencrypt:/etc/letsencrypt"
     networks:
       - nginx
     ports:
