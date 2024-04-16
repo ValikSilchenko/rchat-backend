@@ -20,7 +20,7 @@ from rchat.views.auth.models import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(tags=["Auth"])
 
 
 @router.post("/api/auth", response_model=AuthResponse)
