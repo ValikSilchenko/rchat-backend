@@ -64,3 +64,19 @@ class Message(BaseModel):
     is_silent: bool
     last_edited_at: datetime | None
     created_timestamp: datetime
+
+
+class MediaTypeEnum(StrEnum):
+    photo = "photo"
+    video = "video"
+    video_msg = "video_msg"
+    audio = "audio"
+    audio_msg = "audio_msg"
+
+
+class Media(BaseModel):
+    id: UUID4
+    type: MediaTypeEnum
+    size_bytes: int
+    extension: str
+    created_timestamp: datetime

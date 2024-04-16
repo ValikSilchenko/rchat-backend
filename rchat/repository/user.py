@@ -4,7 +4,7 @@ from secrets import token_hex
 from typing import Optional
 
 from asyncpg import Pool
-from pydantic import UUID3, UUID4, BaseModel
+from pydantic import UUID3, UUID4, UUID5, BaseModel
 
 from rchat.schemas.models import User
 
@@ -145,3 +145,36 @@ class UserRepository:
             rows = await c.fetch(sql, *params)
 
         return [UserFind(**dict(row)) for row in rows]
+
+    async def update_user_info(
+        self,
+        user_id: UUID5,
+        public_id: str,
+        first_name: str,
+        last_name: str | None,
+        avatar_photo_id: UUID4 | None,
+        profile_status: str | None,
+        profile_bio: str | None,
+    ):
+        sql = """
+            update "user"
+            set
+                "public_id" = $2,
+                "first_name" = $3,
+                "last_name" = $4,
+                "avatar_photo_id" = $5,
+                "profile_status" = $6,
+                "profile_bio" = $7
+            where "id" = $1
+        """
+        async with self._db.acquire() as c:
+            await c.execute(
+                sql,
+                user_id,
+                public_id,
+                first_name,
+                last_name,
+                avatar_photo_id,
+                profile_status,
+                profile_bio,
+            )
