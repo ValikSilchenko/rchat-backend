@@ -88,7 +88,7 @@ def get_decoded_token(auth_data: str) -> dict:
             options={"verify_exp": False},
         )
     except JWTError:
-        logger.error("Token decoding error.")
+        logger.error("Token decoding error. token=%s", token)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     return decoded_token
