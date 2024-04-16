@@ -22,3 +22,6 @@ start_postgres:
 
 start_backend:
 	docker-compose -f ./deployments/docker-compose.dev.yml up backend > rchat_logs &
+
+run_registry:
+	docker-compose -f ./deployments/registry/docker-compose.yml up -d
