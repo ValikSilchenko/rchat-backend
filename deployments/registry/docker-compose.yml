@@ -2,7 +2,8 @@ version: '3'
 
 services:
   registry:
-    image: registry:2
+    build:
+      dockerfile: Dockerfile
     restart: always
     ports:
       - "5000:5000"
@@ -16,5 +17,4 @@ services:
     volumes:
       - "/docker_repo:/var/lib/registry"
       - "/auth:/auth"
-      - "/etc/letsencrypt/live:/certs"
 
