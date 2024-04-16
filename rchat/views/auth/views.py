@@ -71,7 +71,7 @@ async def auth(
         user_id=user.id, ip=client_ip, user_agent=user_agent
     )
 
-    tokens = generate_tokens(session=session, user_public_id=user.public_id)
+    tokens = generate_tokens(session=session, user=user)
     return AuthResponse(**tokens)
 
 
@@ -102,7 +102,5 @@ async def update_tokens(session: Session = Depends(check_refresh_token)):
     await app_state.session_repo.delete_session(session_id=session.id)
 
     user = await app_state.user_repo.get_by_id(id_=session.user_id)
-    tokens = generate_tokens(
-        session=new_session, user_public_id=user.public_id
-    )
+    tokens = generate_tokens(session=new_session, user=user)
     return AuthResponse(**tokens)
