@@ -14,7 +14,7 @@ services:
       REGISTRY_HTTP_TLS_CERTIFICATE: ${TLS_CERT}
       REGISTRY_HTTP_TLS_KEY: ${TLS_KEY}
     volumes:
-      - "/var/lib/registry:/docker_repo"
+      - "/docker_repo:/var/lib/registry"
       - "/auth:/auth"
-      - "/certs:/etc/letsencrypt/live"
+      - "/etc/letsencrypt/live:/certs"
 
