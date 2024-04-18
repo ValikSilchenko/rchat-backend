@@ -154,15 +154,12 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
             )
             return
 
-        chats = await app_state.chat_repo.get_private_chat_with_users(
+        chat = await app_state.chat_repo.get_private_chat_with_users(
             users_id_list=[sender_user.id, other_user.id]
         )
-        chat_type = ChatTypeEnum.work if message_body.is_work_chat else ChatTypeEnum.private
-        chat = list(filter(lambda x: x.type == chat_type, chats))
-        chat = chat[0] if chat else None
         if not chat:
             chat = await app_state.chat_repo.create_chat(
-                chat_type=chat_type
+                chat_type=ChatTypeEnum.private
             )
             await app_state.chat_repo.add_chat_participant(
                 chat_id=chat.id, user_id=sender_user.id

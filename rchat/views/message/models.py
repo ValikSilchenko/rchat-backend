@@ -18,7 +18,6 @@ class CreateMessageBody(BaseModel):
     reply_to_message_id: UUID4 | None = None
     forwarded_message_id: UUID4 | None = None
     is_silent: bool = False
-    is_work_chat: bool = False
 
 
 class MessageSender(BaseModel):
