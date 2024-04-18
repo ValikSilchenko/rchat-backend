@@ -4,7 +4,7 @@ from hashlib import sha256
 from fastapi import APIRouter, Depends, Header, HTTPException
 from starlette import status
 
-from rchat.schemas.models import Session
+from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import (
     check_refresh_token,

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from rchat.schemas.models import Session
+from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
 from rchat.views.chat.helpers import get_chat_name

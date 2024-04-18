@@ -9,7 +9,8 @@ from pydantic_core import PydanticCustomError
 from starlette import status
 
 from rchat.conf import REFRESH_LIFETIME_DAYS, SECRET_KEY, SESSION_LIFETIME_MIN
-from rchat.schemas.models import Session, User
+from rchat.schemas.session import Session
+from rchat.schemas.user import User
 from rchat.state import app_state
 from rchat.views.auth.models import LoginTypeEnum, UserDataPatternEnum
 
