@@ -29,6 +29,4 @@ services:
         window: 60s
     logging:
       driver: local
-      options:
-        tag: registry
 
