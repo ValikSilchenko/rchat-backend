@@ -6,7 +6,7 @@ from typing import Optional
 from asyncpg import Pool
 from pydantic import UUID3, UUID4, UUID5, BaseModel
 
-from rchat.schemas.models import User
+from rchat.schemas.user import User
 
 
 class UserFind(BaseModel):

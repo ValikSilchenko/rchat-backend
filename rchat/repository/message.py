@@ -5,7 +5,7 @@ from asyncpg import Pool
 from pydantic import UUID4, UUID5, BaseModel
 
 from rchat.repository.helpers import build_model
-from rchat.schemas.models import Message, MessageTypeEnum
+from rchat.schemas.message import Message, MessageTypeEnum
 
 
 class MessageCreate(BaseModel):

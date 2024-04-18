@@ -1,4 +1,4 @@
-from rchat.schemas.models import Message
+from rchat.schemas.message import Message
 from rchat.state import app_state
 from rchat.views.message.models import MessageSender
 

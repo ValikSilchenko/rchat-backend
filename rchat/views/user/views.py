@@ -3,7 +3,8 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
-from rchat.schemas.models import MediaTypeEnum, Session
+from rchat.schemas.media import MediaTypeEnum
+from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
 from rchat.views.user.models import (

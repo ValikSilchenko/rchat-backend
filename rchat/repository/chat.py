@@ -5,7 +5,7 @@ from typing import Optional
 from asyncpg import Pool
 from pydantic import UUID4, UUID5, BaseModel
 
-from rchat.schemas.models import Chat, ChatTypeEnum
+from rchat.schemas.chat import Chat, ChatTypeEnum
 
 
 class ChatParticipant(BaseModel):

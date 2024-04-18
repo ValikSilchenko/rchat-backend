@@ -2,7 +2,8 @@ from datetime import datetime
 
 from pydantic import UUID4, BaseModel
 
-from rchat.schemas.models import ChatTypeEnum, MessageTypeEnum
+from rchat.schemas.chat import ChatTypeEnum
+from rchat.schemas.message import MessageTypeEnum
 from rchat.views.message.models import MessageSender
 
 

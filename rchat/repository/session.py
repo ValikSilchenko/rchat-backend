@@ -5,7 +5,7 @@ from asyncpg import Pool
 from pydantic import UUID4, UUID5, BaseModel
 
 from rchat.repository.helpers import build_model
-from rchat.schemas.models import Session
+from rchat.schemas.session import Session
 
 
 class SessionCreate(BaseModel):
