@@ -3,8 +3,8 @@ version: '3'
 services:
   registry:
     build:
-      context: ../../..
-      dockerfile: rchat-backend/deployments/registry/Dockerfile
+      context: ../..
+      dockerfile: deployments/registry/Dockerfile
     restart: always
     ports:
       - "5000:5000"
