@@ -2,10 +2,7 @@ version: '3'
 
 services:
   nginx:
-    image: nginx
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${IMAGE_NAME}
     volumes:
       - "/apps/nginx/www:/var/www"
       - "/etc/letsencrypt:/etc/letsencrypt"
@@ -28,6 +25,10 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
+    logging:
+      driver: local
+      options:
+        tag: nginx
 
 
 networks:
