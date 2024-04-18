@@ -2,9 +2,7 @@ version: '3'
 
 services:
   registry:
-    build:
-      context: ../..
-      dockerfile: deployments/registry/Dockerfile
+    image: registry:2.7.0
     restart: always
     ports:
       - "5000:5000"
@@ -17,5 +15,6 @@ services:
       REGISTRY_HTTP_TLS_KEY: ${TLS_KEY}
     volumes:
       - "/docker_repo:/var/lib/registry"
-      - "/auth:/auth"
+      - "./auth:/auth"
+      - "/certs:/certs"
 
