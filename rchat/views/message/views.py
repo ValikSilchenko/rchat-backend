@@ -12,7 +12,8 @@ from rchat.clients.socketio_client import (
 )
 from rchat.repository.message import MessageCreate
 from rchat.schemas.chat import ChatTypeEnum
-from rchat.schemas.message import MessageTypeEnum, Session
+from rchat.schemas.message import MessageTypeEnum
+from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
 from rchat.views.chat.helpers import get_chat_name
