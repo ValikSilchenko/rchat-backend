@@ -105,7 +105,7 @@ class ChatRepository:
 
     async def get_private_chat_with_users(
         self, users_id_list: list[UUID5]
-    ) -> Optional[Chat]:
+    ) -> list[Chat]:
         """
         Получает чат типа private по его участникам, если такой есть.
         """
@@ -124,11 +124,9 @@ class ChatRepository:
                 cu1."user_id" != cu2."user_id"
                 and cu1."user_id" = any($1) and cu2."user_id" = any($1)
                 and c."type" = '{ChatTypeEnum.private}'
+                or c."type" = '{ChatTypeEnum.work}'
         """
         async with self._db.acquire() as c:
-            row = await c.fetchrow(sql, users_id_list)
+            rows = await c.fetch(sql, users_id_list)
 
-        if not row:
-            return
-
-        return Chat(**dict(row))
+        return [Chat(**dict(row)) for row in rows]
