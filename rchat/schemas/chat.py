@@ -8,6 +8,7 @@ class ChatTypeEnum(StrEnum):
     private = "private"
     group = "group"
     channel = "channel"
+    work = "work"
 
 
 class Chat(BaseModel):

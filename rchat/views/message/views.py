@@ -157,8 +157,9 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
             users_id_list=[sender_user.id, other_user.id]
         )
         if not chat:
+            chat_type = ChatTypeEnum.work if message_body.is_work_chat else ChatTypeEnum.private
             chat = await app_state.chat_repo.create_chat(
-                chat_type=ChatTypeEnum.private
+                chat_type=chat_type
             )
             await app_state.chat_repo.add_chat_participant(
                 chat_id=chat.id, user_id=sender_user.id
