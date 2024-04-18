@@ -159,7 +159,7 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
         )
         chat_type = ChatTypeEnum.work if message_body.is_work_chat else ChatTypeEnum.private
         chat = list(filter(lambda x: x.type == chat_type, chats))
-        chat = chat[0] if chats else None
+        chat = chat[0] if chat else None
         if not chat:
             chat = await app_state.chat_repo.create_chat(
                 chat_type=chat_type
