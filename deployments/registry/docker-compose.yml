@@ -3,7 +3,6 @@ version: '3'
 services:
   registry:
     image: registry:2.7.0
-    restart: always
     ports:
       - "5000:5000"
     environment:
@@ -17,4 +16,19 @@ services:
       - "/docker_repo:/var/lib/registry"
       - "./auth:/auth"
       - "/certs:/certs"
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 50M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+        window: 60s
+    logging:
+      driver: local
+      options:
+        tag: registry
 
