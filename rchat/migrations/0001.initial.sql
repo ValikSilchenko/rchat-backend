@@ -52,7 +52,7 @@ create table "geoip" (
 create table "chat" (
     id uuid primary key,
     type varchar(16) not null,
-    name varchar(32) not null,
+    name varchar(32),
     avatar_photo_id uuid references "media" ("id"),
     description varchar(256),
     created_timestamp timestamp not null default now()
