@@ -4,14 +4,9 @@ from secrets import token_hex
 from typing import Optional
 
 from asyncpg import Pool
-from pydantic import UUID3, UUID4, UUID5, BaseModel
+from pydantic import UUID3, UUID4, UUID5
 
-from rchat.schemas.user import User
-
-
-class UserFind(BaseModel):
-    public_id: str
-    avatar_url: str | None = None
+from rchat.schemas.user import User, UserFind
 
 
 class UserRepository:

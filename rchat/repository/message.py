@@ -1,25 +1,10 @@
-import uuid
 from typing import Optional
 
 from asyncpg import Pool
-from pydantic import UUID4, UUID5, BaseModel
+from pydantic import UUID4
 
 from rchat.repository.helpers import build_model
-from rchat.schemas.message import Message, MessageTypeEnum
-
-
-class MessageCreate(BaseModel):
-    id: UUID4 = uuid.uuid4()
-    type: MessageTypeEnum
-    chat_id: UUID4
-    sender_user_id: UUID5 | None = None
-    sender_chat_id: UUID4 | None = None
-    message_text: str | None = None
-    audio_msg_file_id: UUID4 | None = None
-    video_msg_file_id: UUID4 | None = None
-    reply_to_message: UUID4 | None = None
-    forwarded_message: UUID4 | None = None
-    is_silent: bool
+from rchat.schemas.message import Message, MessageCreate
 
 
 class MessageRepository:

@@ -15,3 +15,8 @@ class User(BaseModel):
     profile_status: str | None
     profile_bio: str | None
     created_timestamp: datetime
+
+
+class UserFind(BaseModel):
+    public_id: str
+    avatar_url: str | None = None

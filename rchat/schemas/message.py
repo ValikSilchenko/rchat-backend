@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from enum import StrEnum
 
@@ -24,3 +25,17 @@ class Message(BaseModel):
     is_silent: bool
     last_edited_at: datetime | None
     created_timestamp: datetime
+
+
+class MessageCreate(BaseModel):
+    id: UUID4 = uuid.uuid4()
+    type: MessageTypeEnum
+    chat_id: UUID4
+    sender_user_id: UUID5 | None = None
+    sender_chat_id: UUID4 | None = None
+    message_text: str | None = None
+    audio_msg_file_id: UUID4 | None = None
+    video_msg_file_id: UUID4 | None = None
+    reply_to_message: UUID4 | None = None
+    forwarded_message: UUID4 | None = None
+    is_silent: bool

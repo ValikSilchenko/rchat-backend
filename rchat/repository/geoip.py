@@ -4,20 +4,12 @@ from typing import Optional
 
 import geocoder
 from asyncpg import Pool
-from pydantic import BaseModel
 from requests import RequestException
 
 from rchat.repository.helpers import build_model
+from rchat.schemas.geoip import GeoIPData
 
 logger = logging.getLogger(__name__)
-
-
-class GeoIPData(BaseModel):
-    ip: str
-    state: str | None
-    country: str | None
-    city: str | None
-    updated_timestamp: datetime
 
 
 class GeoIPRepository:
