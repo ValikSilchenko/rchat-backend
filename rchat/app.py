@@ -30,12 +30,12 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-app.mount(path="/", app=sio_client.asio_app)
 
 app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(message_router)
 app.include_router(user_router)
+app.mount(path="/", app=sio_client.asio_app)
 register_exception_handlers(app)
 app.middleware("http")(access_log_middleware)
 
