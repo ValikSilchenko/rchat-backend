@@ -7,7 +7,6 @@ from rchat.repository.media import MediaRepository
 from rchat.repository.message import MessageRepository
 from rchat.repository.session import SessionRepository
 from rchat.repository.user import UserRepository
-from rchat.services.message import MessageService
 
 
 class AppState:
@@ -21,8 +20,6 @@ class AppState:
         self._chat_repo = None
         self._message_repo = None
 
-        self._message_service = None
-
     async def startup(self):
         self._db = await create_pool(dsn=DATABASE_DSN)
 
@@ -32,13 +29,6 @@ class AppState:
         self._media_repo = MediaRepository(db=self._db)
         self._chat_repo = ChatRepository(db=self._db)
         self._message_repo = MessageRepository(db=self._db)
-
-        self._message_service = MessageService(
-            user_repo=self._user_repo,
-            message_repo=self._message_repo,
-            chat_repo=self._chat_repo,
-            media_repo=self._media_repo
-        )
 
     async def shutdown(self):
         if self._db:
@@ -73,11 +63,6 @@ class AppState:
     def message_repo(self) -> MessageRepository:
         assert self._message_repo
         return self._message_repo
-
-    @property
-    def message_service(self) -> MessageService:
-        assert self._message_service
-        return self._message_service
 
 
 app_state = AppState()
