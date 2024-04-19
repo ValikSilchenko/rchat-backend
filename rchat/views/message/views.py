@@ -48,8 +48,8 @@ async def get_chat_messages(
 
     Сообщения отсортированы в порядке убывания даты.
     """
-    chat = await app_state.chat_repo.get_by_id(chat_id)
-    if not chat:
+    is_chat_exists = await app_state.message_service.is_chat_exist(chat_id=chat_id)
+    if not is_chat_exists:
         logger.error(
             "Chat not found. chat_id=%s, session=%s", chat_id, session.id
         )
@@ -58,10 +58,12 @@ async def get_chat_messages(
             detail=ChatMessagesStatusEnum.chat_not_found,
         )
 
-    chat_participants = await app_state.chat_repo.get_chat_participant_users(
-        chat_id
+    is_chat_participant = (
+        await app_state.message_service.is_user_chat_participant(
+            user_id=session.user_id, chat_id=chat_id
+        )
     )
-    if session.user_id not in chat_participants:
+    if not is_chat_participant:
         logger.error(
             "User not in chat. chat_id=%s, session=%s",
             chat_id,
@@ -72,51 +74,13 @@ async def get_chat_messages(
             detail=ChatMessagesStatusEnum.user_not_in_chat,
         )
 
-    messages = await app_state.message_repo.get_chat_messages(
-        chat_id=chat_id, last_order_id=last_order_id, limit=limit
+    response_messages = (
+        await app_state.message_service.get_chat_messages_list(
+            chat_id=chat_id,
+            limi=limit,
+            last_order_id=last_order_id,
+        )
     )
-    response_messages = []
-    for message in messages:
-        forwarded_msg = await app_state.message_repo.get_by_id(
-            id_=message.forwarded_message
-        )
-        if forwarded_msg:
-            forwarded_msg_sender = await get_message_sender(forwarded_msg)
-            forwarded_message = ForeignMessage(
-                id=forwarded_msg.id,
-                type=forwarded_msg.type,
-                message_text=forwarded_msg.message_text,
-                sender=forwarded_msg_sender,
-            )
-        else:
-            forwarded_message = None
-
-        replied_msg = await app_state.message_repo.get_by_id(
-            id_=message.reply_to_message
-        )
-        if replied_msg:
-            replied_msg_sender = await get_message_sender(replied_msg)
-            reply_to_message = ForeignMessage(
-                id=replied_msg.id,
-                type=replied_msg.type,
-                message_text=replied_msg.message_text,
-                sender=replied_msg_sender,
-            )
-        else:
-            reply_to_message = None
-
-        message_sender = await get_message_sender(message)
-        response_messages.append(
-            MessageResponse(
-                **message.model_dump(
-                    exclude={"forwarded_message", "reply_to_message"}
-                ),
-                forwarded_message=forwarded_message,
-                reply_to_message=reply_to_message,
-                sender=message_sender,
-                created_at=message.created_timestamp,
-            )
-        )
 
     return ChatMessagesResponse(messages=response_messages)
 
