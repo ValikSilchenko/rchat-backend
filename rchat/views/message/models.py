@@ -59,7 +59,7 @@ class ChatInfo(BaseModel):
     id: UUID4
     type: ChatTypeEnum
     name: str | None = None
-    created_by: UserCreatedChat
+    created_by: UserCreatedChat | None
     avatar_photo_url: str | None = None
     created_at: datetime
 

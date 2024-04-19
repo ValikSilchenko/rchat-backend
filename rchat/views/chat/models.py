@@ -29,6 +29,8 @@ class ChatListItem(BaseModel):
     name: str
     type: ChatTypeEnum
     is_work_chat: bool = False
+    allow_messages_from: time | None
+    allow_messages_to: time | None
     last_message: LastChatMessage | None
     avatar_photo_url: str | None
 

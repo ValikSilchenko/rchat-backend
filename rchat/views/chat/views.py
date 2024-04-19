@@ -49,6 +49,8 @@ async def get_chat_list(session: Session = Depends(check_access_token)):
                 name=chat_data[0],
                 type=chat.type,
                 is_work_chat=chat.is_work_chat,
+                allow_messages_from=chat.allow_messages_from,
+                allow_messages_to=chat.allow_messages_to,
                 last_message=(
                     LastChatMessage(
                         id=last_chat_message.id,
