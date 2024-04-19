@@ -3,11 +3,10 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
-from fastapi.exception_handlers import request_validation_exception_handler
-from fastapi.exceptions import RequestValidationError
 
+import rchat.clients.socketio_client as sio_client
 from rchat import migration_runner
-from rchat.clients.socketio_client import asio_app
+from rchat.exceptions import register_exception_handlers
 from rchat.helpers import create_storage_folders
 from rchat.log import setup_logging
 from rchat.middlewares import access_log_middleware
@@ -33,20 +32,14 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(auth_router)
-app.include_router(user_router)
-app.include_router(message_router)
 app.include_router(chat_router)
+app.include_router(message_router)
+app.include_router(user_router)
 
-app.mount(path="/", app=asio_app)
-
+register_exception_handlers(app)
 app.middleware("http")(access_log_middleware)
 
-
-@app.exception_handler(RequestValidationError)
-async def validation_error_handler(request, error):
-    logger.error("Validation error=%s", error)
-    return await request_validation_exception_handler(request, error)
-
+app.mount(path="/", app=sio_client.asio_app)
 
 if __name__ == "__main__":
     uvicorn.run(

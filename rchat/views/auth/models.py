@@ -4,11 +4,6 @@ from email_validator import validate_email
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
-class LoginTypeEnum(StrEnum):
-    email = "email"
-    public_id = "public_id"
-
-
 class AuthBody(BaseModel):
     login: str
     password: str

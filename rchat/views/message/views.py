@@ -11,20 +11,20 @@ from rchat.clients.socketio_client import (
     sio,
 )
 from rchat.repository.message import MessageCreate
-from rchat.schemas.models import ChatTypeEnum, MessageTypeEnum, Session
+from rchat.schemas.message import MessageTypeEnum
+from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
-from rchat.views.chat.helpers import get_chat_name
-from rchat.views.message.helpers import get_message_sender
+from rchat.views.message.helpers import (
+    create_and_send_message,
+    get_chat_messages_list,
+    get_private_chat_for_new_message,
+)
 from rchat.views.message.models import (
-    ChatInfo,
     ChatMessagesResponse,
     ChatMessagesStatusEnum,
     CreateMessageBody,
-    ForeignMessage,
-    MessageResponse,
     NewMessageEventStatusEnum,
-    NewMessageResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -70,51 +70,9 @@ async def get_chat_messages(
             detail=ChatMessagesStatusEnum.user_not_in_chat,
         )
 
-    messages = await app_state.message_repo.get_chat_messages(
-        chat_id=chat_id, last_order_id=last_order_id, limit=limit
+    response_messages = await get_chat_messages_list(
+        chat_id=chat_id, limit=limit, last_order_id=last_order_id
     )
-    response_messages = []
-    for message in messages:
-        forwarded_msg = await app_state.message_repo.get_by_id(
-            id_=message.forwarded_message
-        )
-        if forwarded_msg:
-            forwarded_msg_sender = await get_message_sender(forwarded_msg)
-            forwarded_message = ForeignMessage(
-                id=forwarded_msg.id,
-                type=forwarded_msg.type,
-                message_text=forwarded_msg.message_text,
-                sender=forwarded_msg_sender,
-            )
-        else:
-            forwarded_message = None
-
-        replied_msg = await app_state.message_repo.get_by_id(
-            id_=message.reply_to_message
-        )
-        if replied_msg:
-            replied_msg_sender = await get_message_sender(replied_msg)
-            reply_to_message = ForeignMessage(
-                id=replied_msg.id,
-                type=replied_msg.type,
-                message_text=replied_msg.message_text,
-                sender=replied_msg_sender,
-            )
-        else:
-            reply_to_message = None
-
-        message_sender = await get_message_sender(message)
-        response_messages.append(
-            MessageResponse(
-                **message.model_dump(
-                    exclude={"forwarded_message", "reply_to_message"}
-                ),
-                forwarded_message=forwarded_message,
-                reply_to_message=reply_to_message,
-                sender=message_sender,
-                created_at=message.created_timestamp,
-            )
-        )
 
     return ChatMessagesResponse(messages=response_messages)
 
@@ -128,9 +86,7 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
     То создаётся чат и оба пользователя добавляются как участники чата.
     """
     async with sio.session(sid) as io_session:
-        sender_user = await app_state.user_repo.get_by_id(
-            id_=io_session["user_id"]
-        )
+        sender_user_id = io_session["user_id"]
 
     if message_body.other_user_public_id:
         other_user = await app_state.user_repo.get_by_public_id(
@@ -141,7 +97,7 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
                 "Other user not found."
                 " other_user_public_id=%s, sender_user_id=%s",
                 message_body.other_user_public_id,
-                sender_user.id,
+                sender_user_id,
             )
             await sio.emit_error_event(
                 to_sid=sid,
@@ -152,19 +108,9 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
             )
             return
 
-        chat = await app_state.chat_repo.get_private_chat_with_users(
-            users_id_list=[sender_user.id, other_user.id]
+        chat = await get_private_chat_for_new_message(
+            user_id_1=sender_user_id, user_id_2=other_user.id
         )
-        if not chat:
-            chat = await app_state.chat_repo.create_chat(
-                chat_type=ChatTypeEnum.private
-            )
-            await app_state.chat_repo.add_chat_participant(
-                chat_id=chat.id, user_id=sender_user.id
-            )
-            await app_state.chat_repo.add_chat_participant(
-                chat_id=chat.id, user_id=other_user.id
-            )
     elif message_body.chat_id:
         chat = await app_state.chat_repo.get_by_id(
             chat_id=message_body.chat_id
@@ -173,7 +119,7 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
             logger.error(
                 "Chat not found. chat_id=%s, sender_user_id=%s",
                 message_body.chat_id,
-                sender_user.id,
+                sender_user_id,
             )
             await sio.emit_error_event(
                 to_sid=sid,
@@ -186,7 +132,7 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
     else:
         logger.error(
             "No sender were provided. sender_user_id=%s",
-            sender_user.id,
+            sender_user_id,
         )
         await sio.emit_error_event(
             to_sid=sid,
@@ -197,44 +143,13 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
         )
         return
 
-    message = await app_state.message_repo.create_message(
-        message=MessageCreate(
-            **message_body.model_dump(exclude={"chat_id"}),
-            id=uuid.uuid4(),
-            chat_id=chat.id,
-            type=MessageTypeEnum.text,
-            sender_user_id=sender_user.id,
-        )
+    message_create_model = MessageCreate(
+        **message_body.model_dump(exclude={"chat_id"}),
+        id=uuid.uuid4(),
+        chat_id=chat.id,
+        type=MessageTypeEnum.text,
+        sender_user_id=sender_user_id,
     )
-    chat_participants = await app_state.chat_repo.get_chat_participant_users(
-        chat_id=chat.id
+    await create_and_send_message(
+        message_create=message_create_model, chat=chat
     )
-    chat_avatar = (
-        app_state.media_repo.get_media_url(id_=chat.avatar_photo_id)
-        if chat.avatar_photo_id
-        else None
-    )
-
-    message_response = NewMessageResponse(
-        **message.model_dump(),
-        chat=ChatInfo(
-            id=chat.id,
-            type=chat.type,
-            avatar_photo_url=chat_avatar,
-            description=chat.description,
-            created_at=chat.created_timestamp,
-        ),
-        sender=await get_message_sender(message),
-        created_at=message.created_timestamp,
-    )
-    for participant in chat_participants:
-        if participant in sio.users:
-            logger.info("Message sent to user. user_id=%s", participant)
-            message_response.chat.name = await get_chat_name(
-                chat=chat, user_id=participant
-            )
-            await sio.emit(
-                event=SocketioEventsEnum.new_message,
-                data=message_response.model_dump_json(),
-                to=sio.users[participant],
-            )

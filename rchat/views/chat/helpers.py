@@ -1,6 +1,6 @@
 from pydantic import UUID5
 
-from rchat.schemas.models import Chat, ChatTypeEnum
+from rchat.schemas.chat import Chat, ChatTypeEnum
 from rchat.state import app_state
 
 

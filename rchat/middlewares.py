@@ -1,4 +1,5 @@
 import logging
+import time
 
 from fastapi import Request, Response
 
@@ -7,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 async def access_log_middleware(request: Request, call_next):
     status = None
+    start_time = time.monotonic()
     try:
         response: Response = await call_next(request)
         status = response.status_code
@@ -15,4 +17,7 @@ async def access_log_middleware(request: Request, call_next):
         status = 500
         raise
     finally:
-        logger.info("%s %s %s", status, request.method, request.url)
+        time_elapsed = time.monotonic() - start_time
+        logger.info(
+            "%s %.3f %s %s", status, time_elapsed, request.method, request.url
+        )

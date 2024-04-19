@@ -1,19 +1,10 @@
 import uuid
-from datetime import datetime
 from typing import Optional
 
 from asyncpg import Pool
-from pydantic import UUID4, UUID5, BaseModel
+from pydantic import UUID4, UUID5
 
-from rchat.schemas.models import Chat, ChatTypeEnum
-
-
-class ChatParticipant(BaseModel):
-    chat_id: UUID4
-    user_id: UUID5
-    is_chat_owner: bool
-    last_available_message: UUID4 | None
-    created_timestamp: datetime
+from rchat.schemas.chat import Chat, ChatTypeEnum
 
 
 class ChatRepository:

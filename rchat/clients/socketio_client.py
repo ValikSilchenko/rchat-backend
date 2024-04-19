@@ -56,7 +56,8 @@ class SocketIOClient(socketio.AsyncServer):
     ):
         try:
             cls = self._get_handler_params_type(data[0], namespace, sid)
-            assert len(data) == 2
+            if len(data) > 2:
+                raise ValidationError
             r = await server._trigger_event(
                 data[0], namespace, sid, cls(**data[1])
             )
@@ -67,16 +68,6 @@ class SocketIOClient(socketio.AsyncServer):
                 to_sid=sid,
                 event_name=data[0],
                 error_msg=str(err),
-                data=data,
-            )
-            return
-        except AssertionError:
-            logger.error("Too many arguments given. data=%s", data)
-            await self.emit_error_event(
-                status=SocketioErrorStatusEnum.invalid_data,
-                to_sid=sid,
-                event_name=data[0],
-                error_msg=str("Too many arguments given."),
                 data=data,
             )
             return
