@@ -16,7 +16,7 @@ class ChatCreate(BaseModel):
     type: ChatTypeEnum
     name: str | None
     created_by: UUID5 | None
-    avatar_photo_id: UUID4 | None
+    avatar_photo_id: UUID4 | None = None
     description: str | None
     is_work_chat: bool
     allow_messages_from: time | None

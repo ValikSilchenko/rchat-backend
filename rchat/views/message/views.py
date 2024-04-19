@@ -103,7 +103,7 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
                 status=SocketioErrorStatusEnum.invalid_data,
                 event_name=SocketioEventsEnum.new_message,
                 error_msg=NewMessageEventStatusEnum.user_not_found,
-                data=message_body.model_dump(),
+                data=message_body.model_dump_json(),
             )
             return
 
@@ -125,7 +125,7 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
                 status=SocketioErrorStatusEnum.invalid_data,
                 event_name=SocketioEventsEnum.new_message,
                 error_msg=NewMessageEventStatusEnum.chat_not_found,
-                data=message_body.model_dump(),
+                data=message_body.model_dump_json(),
             )
             return
     else:
@@ -138,7 +138,7 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
             status=SocketioErrorStatusEnum.invalid_data,
             event_name=SocketioEventsEnum.new_message,
             error_msg=NewMessageEventStatusEnum.no_message_sender_provided,
-            data=message_body.model_dump(),
+            data=message_body.model_dump_json(),
         )
         return
 
