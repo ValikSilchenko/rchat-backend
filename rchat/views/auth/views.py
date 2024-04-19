@@ -11,11 +11,7 @@ from rchat.views.auth.helpers import (
     generate_tokens,
     get_user_by_login,
 )
-from rchat.views.auth.models import (
-    AuthBody,
-    AuthResponse,
-    CreateUserData,
-)
+from rchat.views.auth.models import AuthBody, AuthResponse, CreateUserData
 
 logger = logging.getLogger(__name__)
 
@@ -38,9 +34,7 @@ async def auth(
     user = await get_user_by_login(login=body.login)
 
     if not user:
-        logger.error(
-            "User not found. login=%s", body.login
-        )
+        logger.error("User not found. login=%s", body.login)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     encrypted_password = sha256(

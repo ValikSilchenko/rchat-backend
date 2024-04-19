@@ -32,9 +32,7 @@ async def get_user_by_login(login: str) -> Optional[User]:
         pass
 
     if re.match(UserDataPatternEnum.public_id, login):
-        user = await app_state.user_repo.get_by_public_id(
-            public_id=login
-        )
+        user = await app_state.user_repo.get_by_public_id(public_id=login)
 
     return user
 
