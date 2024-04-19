@@ -9,10 +9,10 @@ from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
 from rchat.views.user.models import (
     FindUsersResponse,
+    FoundUser,
     ProfileResponse,
     ProfileUpdateBody,
     ProfileUpdateStatusEnum,
-    FoundUser,
 )
 
 logger = logging.getLogger(__name__)

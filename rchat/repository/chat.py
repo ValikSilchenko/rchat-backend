@@ -53,12 +53,12 @@ class ChatRepository:
         return Chat(**dict(row))
 
     async def add_chat_participant(
-            self,
-            chat_id: UUID4,
-            user_id: UUID5,
-            added_by_user: UUID5 | None = None,
-            is_chat_owner: bool = False,
-            last_available_message: UUID4 | None = None,
+        self,
+        chat_id: UUID4,
+        user_id: UUID5,
+        added_by_user: UUID5 | None = None,
+        is_chat_owner: bool = False,
+        last_available_message: UUID4 | None = None,
     ) -> None:
         """
         Добавляет пользователя в чат как участника.
