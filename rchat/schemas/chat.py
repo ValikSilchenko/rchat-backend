@@ -14,13 +14,13 @@ class ChatTypeEnum(StrEnum):
 class ChatCreate(BaseModel):
     id: UUID4 = uuid.uuid4()
     type: ChatTypeEnum
-    name: str | None
-    created_by: UUID5 | None
+    name: str | None = None
+    created_by: UUID5 | None = None
     avatar_photo_id: UUID4 | None = None
-    description: str | None
+    description: str | None = None
     is_work_chat: bool
-    allow_messages_from: time | None
-    allow_messages_to: time | None
+    allow_messages_from: time | None = None
+    allow_messages_to: time | None = None
 
 
 class Chat(BaseModel):
