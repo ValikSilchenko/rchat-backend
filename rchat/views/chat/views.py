@@ -7,7 +7,7 @@ from rchat.schemas.message import MessageCreate, MessageTypeEnum
 from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
-from rchat.views.chat.helpers import get_chat_name
+from rchat.views.chat.helpers import get_chat_name_and_avatar
 from rchat.views.chat.models import (
     ChatListItem,
     ChatListResponse,
@@ -40,15 +40,13 @@ async def get_chat_list(session: Session = Depends(check_access_token)):
         last_chat_message = await app_state.message_repo.get_last_chat_message(
             chat_id=chat.id
         )
-        avatar_url = (
-            app_state.media_repo.get_media_url(chat.avatar_photo_id)
-            if chat.avatar_photo_id
-            else None
+        chat_data = await get_chat_name_and_avatar(
+            chat=chat, user_id=session.user_id
         )
         chat_list.append(
             ChatListItem(
                 id=chat.id,
-                name=await get_chat_name(chat=chat, user_id=session.user_id),
+                name=chat_data[0],
                 type=chat.type,
                 is_work_chat=chat.is_work_chat,
                 last_message=(
@@ -62,7 +60,7 @@ async def get_chat_list(session: Session = Depends(check_access_token)):
                     if last_chat_message
                     else None
                 ),
-                avatar_photo_url=avatar_url,
+                avatar_photo_url=chat_data[1],
             )
         )
 
@@ -74,6 +72,12 @@ async def create_group_chat(
     group_chat_info: CreateGroupChatBody,
     session: Session = Depends(check_access_token),
 ):
+    """
+    Создаёт групповой чат с пользователями.
+    Каждому пользователю, добавленному в чат, отправляется сообщение,
+    что чат создан.
+    Чат также может быть помечен как рабочий.
+    """
     owner_user = await app_state.user_repo.get_by_id(id_=session.user_id)
     not_found_users = []
     user_first_names = owner_user.first_name
