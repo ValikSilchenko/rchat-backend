@@ -1,4 +1,5 @@
 import uuid
+from datetime import time
 from typing import Optional
 
 from asyncpg import Pool
@@ -16,33 +17,71 @@ class ChatRepository:
         chat_type: str,
         chat_name: str | None = None,
         description: str | None = None,
+        is_work_chat: bool = False,
+        allow_messages_from: time | None = None,
+        allow_messages_to: time | None = None,
     ) -> Chat:
         """
         Создаёт чат в БД.
         """
         chat_id = uuid.uuid4()
         sql = """
-            insert into "chat" (id, type, name, description)
-            values ($1, $2, $3, $4)
+            insert into "chat" (
+                "id",
+                "type",
+                "name",
+                "description",
+                "is_work_chat",
+                "allow_messages_from",
+                "allow_messages_to"
+            )
+            values ($1, $2, $3, $4, $5, $6, $7)
             returning *
         """
         async with self._db.acquire() as c:
             row = await c.fetchrow(
-                sql, chat_id, chat_type, chat_name, description
+                sql,
+                chat_id,
+                chat_type,
+                chat_name,
+                description,
+                is_work_chat,
+                allow_messages_from,
+                allow_messages_to,
             )
 
         return Chat(**dict(row))
 
-    async def add_chat_participant(self, chat_id: UUID4, user_id: UUID5):
+    async def add_chat_participant(
+            self,
+            chat_id: UUID4,
+            user_id: UUID5,
+            added_by_user: UUID5 | None = None,
+            is_chat_owner: bool = False,
+            last_available_message: UUID4 | None = None,
+    ) -> None:
         """
         Добавляет пользователя в чат как участника.
         """
         sql = """
-            insert into "chat_user" (chat_id, user_id)
-            values ($1, $2)
+            insert into "chat_user" (
+                "chat_id",
+                "user_id",
+                "added_by_user",
+                "is_chat_owner",
+                "last_available_message"
+            )
+            values ($1, $2, $3, $4, $5)
         """
         async with self._db.acquire() as c:
-            await c.execute(sql, chat_id, user_id)
+            await c.execute(
+                sql,
+                chat_id,
+                user_id,
+                added_by_user,
+                is_chat_owner,
+                last_available_message,
+            )
 
     async def get_by_id(self, chat_id: UUID4) -> Optional[Chat]:
         """
