@@ -67,13 +67,13 @@ async def get_chat_list(session: Session = Depends(check_access_token)):
     return ChatListResponse(chat_list=chat_list)
 
 
-@router.post(path="/chat/create", response_model=CreateGroupChatResponse)
+@router.post(path="/chat/create_group", response_model=CreateGroupChatResponse)
 async def create_group_chat(
     group_chat_info: CreateGroupChatBody,
     session: Session = Depends(check_access_token),
 ):
     not_found_users = []
-    for user_id in group_chat_info.user_ids:
+    for user_id in group_chat_info.user_id_list:
         user = await app_state.user_repo.get_by_id(id_=user_id)
         if not user:
             not_found_users.append(user_id)
@@ -99,7 +99,7 @@ async def create_group_chat(
     )
 
     owner_user = await app_state.user_repo.get_by_id(id_=session.user_id)
-    for user_id in group_chat_info.user_ids:
+    for user_id in group_chat_info.user_id_list:
         await app_state.chat_repo.add_chat_participant(
             chat_id=chat.id, user_id=user_id, added_by_user=owner_user.id
         )
@@ -115,9 +115,9 @@ async def create_group_chat(
         )
 
         if user_id in sio.users:
-            sio.emit(
+            await sio.emit(
                 event=SocketioEventsEnum.added_in_chat,
-                data=added_in_chat_data.model_dump(),
+                data=added_in_chat_data.model_dump_json(),
                 to=sio.users[user_id],
             )
 
