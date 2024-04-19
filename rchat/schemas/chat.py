@@ -18,7 +18,7 @@ class ChatCreate(BaseModel):
     created_by: UUID5 | None = None
     avatar_photo_id: UUID4 | None = None
     description: str | None = None
-    is_work_chat: bool
+    is_work_chat: bool = False
     allow_messages_from: time | None = None
     allow_messages_to: time | None = None
 
