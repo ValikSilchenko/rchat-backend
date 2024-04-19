@@ -86,7 +86,6 @@ async def create_group_chat(
         return CreateGroupChatResponse(
             status=CreateGroupChatStatusEnum.users_not_found,
             users_not_found=not_found_users,
-            chat_id=None,
         )
 
     chat = await app_state.chat_repo.create_chat(
@@ -125,4 +124,6 @@ async def create_group_chat(
         chat_id=chat.id, user_id=owner_user.id, is_chat_owner=True
     )
 
-    return CreateGroupChatResponse(chat_id=chat.id, users_not_found=[])
+    return CreateGroupChatResponse(
+        chat_id=chat.id, chat_name=chat.name, users_not_found=[]
+    )
