@@ -1,13 +1,18 @@
 from enum import StrEnum
 
-from pydantic import UUID4, BaseModel, Field
+from pydantic import UUID4, BaseModel, Field, UUID5
 
-from rchat.repository.user import UserFind
 from rchat.views.auth.models import UserDataPatternEnum
 
 
+class FoundUser(BaseModel):
+    id: UUID5
+    public_id: str
+    avatar_url: str | None
+
+
 class FindUsersResponse(BaseModel):
-    users: list[UserFind]
+    users: list[FoundUser]
 
 
 class ProfileResponse(BaseModel):

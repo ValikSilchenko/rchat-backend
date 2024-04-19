@@ -12,6 +12,7 @@ from rchat.views.user.models import (
     ProfileResponse,
     ProfileUpdateBody,
     ProfileUpdateStatusEnum,
+    FoundUser,
 )
 
 logger = logging.getLogger(__name__)
@@ -91,6 +92,22 @@ async def get_match_users(
 
     match_users = await app_state.user_repo.find_users_by_public_id(
         match_str=match_str, except_user_id=session.user_id
+    )
+    match_users = list(
+        map(
+            lambda user: FoundUser(
+                id=user.id,
+                public_id=user.public_id,
+                avatar_url=(
+                    app_state.media_repo.get_media_url(
+                        id_=user.avatar_photo_id
+                    )
+                    if user.avatar_photo_id
+                    else None
+                ),
+            ),
+            match_users,
+        )
     )
 
     return FindUsersResponse(users=match_users)
