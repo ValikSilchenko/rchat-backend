@@ -1,6 +1,7 @@
 import logging
 import re
 from datetime import datetime, timedelta
+from typing import Optional
 
 from fastapi import Header, HTTPException
 from jose import JWTError, jwt
@@ -12,27 +13,28 @@ from rchat.conf import REFRESH_LIFETIME_DAYS, SECRET_KEY, SESSION_LIFETIME_MIN
 from rchat.schemas.session import Session
 from rchat.schemas.user import User
 from rchat.state import app_state
-from rchat.views.auth.models import LoginTypeEnum, UserDataPatternEnum
+from rchat.views.auth.models import UserDataPatternEnum
 
 logger = logging.getLogger(__name__)
 
 
-def get_login_type(login: str) -> LoginTypeEnum | None:
+async def get_user_by_login(login: str) -> Optional[User]:
     """
-    Возвращает тип логина для переданной строки.
-    :param login: строка, используемая как логин пользователя
-    :return: тип логина (email или public_id)
-    или None при несоответствии одному из форматов
+    Возвращет пользователя по логину.
+    Если логин неверный или пользователь не найден, возвращается None.
     """
+    user = None
     try:
         validate_email(login)
         # в случае несовпадения паттерну вызывает исключение
-        return LoginTypeEnum.email
+        user = await app_state.user_repo.get_by_email(email=login)
     except PydanticCustomError:
         pass
 
     if re.match(UserDataPatternEnum.public_id, login):
-        return LoginTypeEnum.public_id
+        user = await app_state.user_repo.get_by_public_id(public_id=login)
+
+    return user
 
 
 def generate_tokens(session: Session, user: User) -> dict[str, str]:

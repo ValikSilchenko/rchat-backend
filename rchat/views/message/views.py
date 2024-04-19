@@ -11,23 +11,20 @@ from rchat.clients.socketio_client import (
     sio,
 )
 from rchat.repository.message import MessageCreate
-from rchat.schemas.chat import ChatTypeEnum
 from rchat.schemas.message import MessageTypeEnum
 from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
-from rchat.views.chat.helpers import get_chat_name
 from rchat.views.message.helpers import (
+    create_and_send_message,
     get_chat_messages_list,
-    get_message_sender,
+    get_private_chat_for_new_message,
 )
 from rchat.views.message.models import (
-    ChatInfo,
     ChatMessagesResponse,
     ChatMessagesStatusEnum,
     CreateMessageBody,
     NewMessageEventStatusEnum,
-    NewMessageResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -110,19 +107,9 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
             )
             return
 
-        chat = await app_state.chat_repo.get_private_chat_with_users(
-            users_id_list=[sender_user_id, other_user.id]
+        chat = await get_private_chat_for_new_message(
+            user_id_1=sender_user_id, user_id_2=other_user.id
         )
-        if not chat:
-            chat = await app_state.chat_repo.create_chat(
-                chat_type=ChatTypeEnum.private
-            )
-            await app_state.chat_repo.add_chat_participant(
-                chat_id=chat.id, user_id=sender_user_id
-            )
-            await app_state.chat_repo.add_chat_participant(
-                chat_id=chat.id, user_id=other_user.id
-            )
     elif message_body.chat_id:
         chat = await app_state.chat_repo.get_by_id(
             chat_id=message_body.chat_id
@@ -155,43 +142,13 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
         )
         return
 
-    message = await app_state.message_repo.create_message(
-        message=MessageCreate(
-            **message_body.model_dump(exclude={"chat_id"}),
-            id=uuid.uuid4(),
-            chat_id=chat.id,
-            type=MessageTypeEnum.text,
-            sender_user_id=sender_user_id,
-        )
+    message_create_model = MessageCreate(
+        **message_body.model_dump(exclude={"chat_id"}),
+        id=uuid.uuid4(),
+        chat_id=chat.id,
+        type=MessageTypeEnum.text,
+        sender_user_id=sender_user_id,
     )
-    chat_participants = await app_state.chat_repo.get_chat_participant_users(
-        chat_id=chat.id
+    await create_and_send_message(
+        message_create=message_create_model, chat=chat
     )
-    chat_avatar = (
-        app_state.media_repo.get_media_url(id_=chat.avatar_photo_id)
-        if chat.avatar_photo_id
-        else None
-    )
-
-    message_response = NewMessageResponse(
-        **message.model_dump(),
-        chat=ChatInfo(
-            id=chat.id,
-            type=chat.type,
-            avatar_photo_url=chat_avatar,
-            created_at=chat.created_timestamp,
-        ),
-        sender=await get_message_sender(message),
-        created_at=message.created_timestamp,
-    )
-    for participant in chat_participants:
-        if participant in sio.users:
-            logger.info("Message sent to user. user_id=%s", participant)
-            message_response.chat.name = await get_chat_name(
-                chat=chat, user_id=participant
-            )
-            await sio.emit(
-                event=SocketioEventsEnum.new_message,
-                data=message_response.model_dump_json(),
-                to=sio.users[participant],
-            )
