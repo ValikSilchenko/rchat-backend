@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, time
 from enum import StrEnum
 
@@ -10,10 +11,23 @@ class ChatTypeEnum(StrEnum):
     channel = "channel"
 
 
+class ChatCreate(BaseModel):
+    id: UUID4 = uuid.uuid4()
+    type: ChatTypeEnum
+    name: str | None
+    created_by: UUID5 | None
+    avatar_photo_id: UUID4 | None
+    description: str | None
+    is_work_chat: bool
+    allow_messages_from: time | None
+    allow_messages_to: time | None
+
+
 class Chat(BaseModel):
     id: UUID4
     type: ChatTypeEnum
     name: str | None
+    created_by: UUID5 | None
     avatar_photo_id: UUID4 | None
     description: str | None
     is_work_chat: bool

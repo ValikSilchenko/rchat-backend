@@ -3,7 +3,7 @@ import logging
 from pydantic import UUID4, UUID5
 
 from rchat.clients.socketio_client import SocketioEventsEnum, sio
-from rchat.schemas.chat import Chat, ChatTypeEnum
+from rchat.schemas.chat import Chat, ChatTypeEnum, ChatCreate
 from rchat.schemas.message import Message, MessageCreate
 from rchat.state import app_state
 from rchat.views.chat.helpers import get_chat_name
@@ -159,7 +159,7 @@ async def get_private_chat_for_new_message(
     )
     if not chat:
         chat = await app_state.chat_repo.create_chat(
-            chat_type=ChatTypeEnum.private
+            create_model=ChatCreate(type=ChatTypeEnum.private)
         )
         await app_state.chat_repo.add_chat_participant(
             chat_id=chat.id, user_id=user_id_1

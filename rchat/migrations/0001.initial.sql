@@ -53,6 +53,7 @@ create table "chat" (
     id uuid primary key,
     type varchar(16) not null,
     name varchar(32),
+    created_by uuid references "user" ("id"),
     avatar_photo_id uuid references "media" ("id"),
     description varchar(256),
     is_work_chat bool not null default false,

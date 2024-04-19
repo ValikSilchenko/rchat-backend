@@ -3,7 +3,8 @@ import logging
 from fastapi import APIRouter, Depends
 
 from rchat.clients.socketio_client import SocketioEventsEnum, sio
-from rchat.schemas.chat import ChatTypeEnum
+from rchat.schemas.chat import ChatTypeEnum, ChatCreate
+from rchat.schemas.message import MessageCreate, MessageTypeEnum
 from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
@@ -18,7 +19,7 @@ from rchat.views.chat.models import (
     GroupChatInfo,
     LastChatMessage,
 )
-from rchat.views.message.helpers import get_message_sender
+from rchat.views.message.helpers import get_message_sender, create_and_send_message
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Chat"])
@@ -96,39 +97,33 @@ async def create_group_chat(
     chat_name = (
         group_chat_info.name if group_chat_info.name else user_first_names
     )
-    chat = await app_state.chat_repo.create_chat(
-        chat_type=ChatTypeEnum.group,
-        chat_name=chat_name,
+    create_model = ChatCreate(
+        type=ChatTypeEnum.group,
+        name=chat_name,
+        created_by=owner_user.id,
         description=group_chat_info.description,
         is_work_chat=group_chat_info.is_work_chat,
         allow_messages_from=group_chat_info.allow_messages_from,
         allow_messages_to=group_chat_info.allow_messages_to,
     )
+    chat = await app_state.chat_repo.create_chat(create_model=create_model)
 
     for user_id in group_chat_info.user_id_list:
         await app_state.chat_repo.add_chat_participant(
             chat_id=chat.id, user_id=user_id, added_by_user=owner_user.id
         )
-        added_in_chat_data = AddedInChatInfo(
-            chat_info=GroupChatInfo(
-                id=chat.id,
-                name=chat.name,
-                is_work_chat=chat.is_work_chat,
-                avatar_photo_url=None,
-                created_at=chat.created_timestamp,
-            ),
-            user_who_added=owner_user.first_name,
-        )
-
-        if user_id in sio.users:
-            await sio.emit(
-                event=SocketioEventsEnum.added_in_chat,
-                data=added_in_chat_data.model_dump_json(),
-                to=sio.users[user_id],
-            )
 
     await app_state.chat_repo.add_chat_participant(
         chat_id=chat.id, user_id=owner_user.id, is_chat_owner=True
+    )
+
+    message_create_model = MessageCreate(
+        type=MessageTypeEnum.created_chat,
+        chat_id=chat.id,
+        sender_chat_id=chat.id,
+    )
+    await create_and_send_message(
+        message_create=message_create_model, chat=chat
     )
 
     return CreateGroupChatResponse(

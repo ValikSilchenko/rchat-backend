@@ -5,50 +5,26 @@ from typing import Optional
 from asyncpg import Pool
 from pydantic import UUID4, UUID5
 
-from rchat.schemas.chat import Chat, ChatTypeEnum
+from rchat.repository.helpers import build_model
+from rchat.schemas.chat import Chat, ChatTypeEnum, ChatCreate
 
 
 class ChatRepository:
     def __init__(self, db: Pool):
         self._db = db
 
-    async def create_chat(
-        self,
-        chat_type: str,
-        chat_name: str | None = None,
-        description: str | None = None,
-        is_work_chat: bool = False,
-        allow_messages_from: time | None = None,
-        allow_messages_to: time | None = None,
-    ) -> Chat:
+    async def create_chat(self, create_model: ChatCreate) -> Chat:
         """
         Создаёт чат в БД.
         """
-        chat_id = uuid.uuid4()
-        sql = """
-            insert into "chat" (
-                "id",
-                "type",
-                "name",
-                "description",
-                "is_work_chat",
-                "allow_messages_from",
-                "allow_messages_to"
-            )
-            values ($1, $2, $3, $4, $5, $6, $7)
+        model_build = build_model(create_model)
+        sql = f"""
+            insert into "chat" ({model_build.field_names})
+            values ({model_build.placeholders})
             returning *
         """
         async with self._db.acquire() as c:
-            row = await c.fetchrow(
-                sql,
-                chat_id,
-                chat_type,
-                chat_name,
-                description,
-                is_work_chat,
-                allow_messages_from,
-                allow_messages_to,
-            )
+            row = await c.fetchrow(sql, *model_build.values)
 
         return Chat(**dict(row))
 
@@ -120,6 +96,7 @@ class ChatRepository:
                 "chat"."id",
                 "chat"."type",
                 "chat"."name",
+                "chat"."created_by",
                 "chat"."avatar_photo_id",
                 "chat"."description",
                 "chat"."is_work_chat",
@@ -135,6 +112,7 @@ class ChatRepository:
                 "chat"."id",
                 "chat"."type",
                 "chat"."name",
+                "chat"."created_by",
                 "chat"."avatar_photo_id",
                 "chat"."description",
                 "chat"."is_work_chat",
