@@ -16,7 +16,6 @@ class SocketioEventsEnum(StrEnum):
     update_message = "_update_message_"
     delete_message = "_delete_message_"
     read_message = "_read_message_"
-    added_in_chat = "_added_in_chat_"
     error = "_error_"
 
 
