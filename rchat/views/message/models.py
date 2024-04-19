@@ -46,6 +46,11 @@ class ForeignMessage(BaseModel):
     sender: MessageSender
 
 
+class UserCreatedChat(BaseModel):
+    id: UUID5
+    first_name: str
+
+
 class ChatInfo(BaseModel):
     """
     Модель информации о чате, в котором пришло сообщение.
@@ -54,8 +59,8 @@ class ChatInfo(BaseModel):
     id: UUID4
     type: ChatTypeEnum
     name: str | None = None
-    avatar_photo_url: str | None
-    description: str | None
+    created_by: UserCreatedChat
+    avatar_photo_url: str | None = None
     created_at: datetime
 
 

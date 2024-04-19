@@ -28,7 +28,6 @@ from rchat.views.message.models import (
 )
 
 logger = logging.getLogger(__name__)
-
 router = APIRouter(tags=["Message"])
 
 

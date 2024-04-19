@@ -117,10 +117,10 @@ class UserRepository:
          которого нужно исключить из результатов поиска,
          позволяет исключить поиск самого себя в том числе
         :return: список найденных пользователей,
-         для каждого пользователя возвращается его public_id и аватар
+         для каждого пользователя возвращается его id, public_id и аватар
         """
         sql = f"""
-            select "public_id" from "user"
+            select "id", "public_id", "avatar_photo_id" from "user"
             where "public_id" like '@%' || $1 || '%'
             and {'"id" <> $2' if except_user_id else True}
             order by

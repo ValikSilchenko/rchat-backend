@@ -18,5 +18,6 @@ class User(BaseModel):
 
 
 class UserFind(BaseModel):
+    id: UUID5
     public_id: str
-    avatar_url: str | None = None
+    avatar_photo_id: UUID4 | None

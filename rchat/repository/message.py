@@ -15,14 +15,14 @@ class MessageRepository:
         """
         Добавляет сообщение в БД на основе модели для создания.
         """
-        sql_build = build_model(message)
+        model_build = build_model(message)
         sql = f"""
-            insert into "message" ({sql_build.field_names})
-            values ({sql_build.placeholders})
+            insert into "message" ({model_build.field_names})
+            values ({model_build.placeholders})
             returning *
         """
         async with self._db.acquire() as c:
-            row = await c.fetchrow(sql, *sql_build.values)
+            row = await c.fetchrow(sql, *model_build.values)
 
         return Message(**dict(row))
 

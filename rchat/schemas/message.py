@@ -9,6 +9,7 @@ class MessageTypeEnum(StrEnum):
     text = "text"
     audio = "audio"
     video = "video"
+    created_chat = "created_chat"
 
 
 class Message(BaseModel):
@@ -38,4 +39,4 @@ class MessageCreate(BaseModel):
     video_msg_file_id: UUID4 | None = None
     reply_to_message: UUID4 | None = None
     forwarded_message: UUID4 | None = None
-    is_silent: bool
+    is_silent: bool = False

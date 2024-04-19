@@ -1,18 +1,20 @@
 import logging
+from typing import Optional
 
 from pydantic import UUID4, UUID5
 
 from rchat.clients.socketio_client import SocketioEventsEnum, sio
-from rchat.schemas.chat import Chat, ChatTypeEnum
+from rchat.schemas.chat import Chat, ChatCreate, ChatTypeEnum
 from rchat.schemas.message import Message, MessageCreate
 from rchat.state import app_state
-from rchat.views.chat.helpers import get_chat_name
+from rchat.views.chat.helpers import get_chat_name_and_avatar
 from rchat.views.message.models import (
     ChatInfo,
     ForeignMessage,
     MessageResponse,
     MessageSender,
     NewMessageResponse,
+    UserCreatedChat,
 )
 
 logger = logging.getLogger(__name__)
@@ -104,7 +106,11 @@ async def get_message_sender(message: Message) -> MessageSender:
     )
 
 
-async def create_and_send_message(message_create: MessageCreate, chat: Chat):
+async def create_and_send_message(
+    message_create: MessageCreate,
+    chat: Chat,
+    chat_created_by: Optional[UserCreatedChat] = None,
+):
     """
     Создаёт сообщение из переданной модели
     и отправляет его всем участникам чата.
@@ -115,20 +121,15 @@ async def create_and_send_message(message_create: MessageCreate, chat: Chat):
     chat_participants = await app_state.chat_repo.get_chat_participant_users(
         chat_id=chat.id
     )
-    chat_avatar = (
-        app_state.media_repo.get_media_url(id_=chat.avatar_photo_id)
-        if chat.avatar_photo_id
-        else None
-    )
 
     message_response = NewMessageResponse(
         **message.model_dump(),
         chat=ChatInfo(
             id=chat.id,
             type=chat.type,
-            avatar_photo_url=chat_avatar,
             description=chat.description,
             created_at=chat.created_timestamp,
+            created_by=chat_created_by,
         ),
         sender=await get_message_sender(message),
         created_at=message.created_timestamp,
@@ -136,9 +137,11 @@ async def create_and_send_message(message_create: MessageCreate, chat: Chat):
     for participant in chat_participants:
         if participant in sio.users:
             logger.info("Message sent to user. user_id=%s", participant)
-            message_response.chat.name = await get_chat_name(
+            chat_data = await get_chat_name_and_avatar(
                 chat=chat, user_id=participant
             )
+            message_response.chat.name = chat_data[0]
+            message_response.chat.avatar_photo_url = chat_data[1]
             await sio.emit(
                 event=SocketioEventsEnum.new_message,
                 data=message_response.model_dump_json(),
@@ -159,7 +162,7 @@ async def get_private_chat_for_new_message(
     )
     if not chat:
         chat = await app_state.chat_repo.create_chat(
-            chat_type=ChatTypeEnum.private
+            create_model=ChatCreate(type=ChatTypeEnum.private)
         )
         await app_state.chat_repo.add_chat_participant(
             chat_id=chat.id, user_id=user_id_1
