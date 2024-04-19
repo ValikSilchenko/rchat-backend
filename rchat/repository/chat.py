@@ -122,6 +122,9 @@ class ChatRepository:
                 "chat"."name",
                 "chat"."avatar_photo_id",
                 "chat"."description",
+                "chat"."is_work_chat",
+                "chat"."allow_messages_from",
+                "chat"."allow_messages_to",
                 "chat"."created_timestamp",
                 max(m."created_timestamp") as last_message_timestamp
             from "chat"
@@ -134,6 +137,9 @@ class ChatRepository:
                 "chat"."name",
                 "chat"."avatar_photo_id",
                 "chat"."description",
+                "chat"."is_work_chat",
+                "chat"."allow_messages_from",
+                "chat"."allow_messages_to",
                 "chat"."created_timestamp"
             order by last_message_timestamp desc
         """
