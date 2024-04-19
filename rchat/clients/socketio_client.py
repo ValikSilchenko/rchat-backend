@@ -58,9 +58,7 @@ class SocketIOClient(socketio.AsyncServer):
             cls = self._get_handler_params_type(data[0], namespace, sid)
             if len(data) > 2:
                 raise ValidationError
-            r = await server._trigger_event(
-                data[0], namespace, sid, cls(**data[1])
-            )
+            cls(**data[1]
         except ValidationError as err:
             logger.error("Validation error. data=%s, err=%s", data, err)
             await self.emit_error_event(
@@ -71,6 +69,10 @@ class SocketIOClient(socketio.AsyncServer):
                 data=data,
             )
             return
+        try:
+            r = await server._trigger_event(
+                data[0], namespace, sid, cls(**data[1])
+            )
         except Exception:
             await self.emit_error_event(
                 status=SocketioErrorStatusEnum.server_error,
