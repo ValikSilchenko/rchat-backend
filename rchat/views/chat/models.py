@@ -46,19 +46,6 @@ class CreateGroupChatBody(BaseModel):
     allow_messages_to: time | None = None
 
 
-class GroupChatInfo(BaseModel):
-    id: UUID4
-    name: str
-    is_work_chat: bool
-    avatar_photo_url: str | None
-    created_at: datetime
-
-
-class AddedInChatInfo(BaseModel):
-    chat_info: GroupChatInfo
-    user_who_added: str
-
-
 class CreateGroupChatStatusEnum(StrEnum):
     ok = "ok"
     users_not_found = "users_not_found"

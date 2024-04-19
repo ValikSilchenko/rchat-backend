@@ -2,24 +2,25 @@ import logging
 
 from fastapi import APIRouter, Depends
 
-from rchat.clients.socketio_client import SocketioEventsEnum, sio
-from rchat.schemas.chat import ChatTypeEnum, ChatCreate
+from rchat.schemas.chat import ChatCreate, ChatTypeEnum
 from rchat.schemas.message import MessageCreate, MessageTypeEnum
 from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
 from rchat.views.chat.helpers import get_chat_name
 from rchat.views.chat.models import (
-    AddedInChatInfo,
     ChatListItem,
     ChatListResponse,
     CreateGroupChatBody,
     CreateGroupChatResponse,
     CreateGroupChatStatusEnum,
-    GroupChatInfo,
     LastChatMessage,
 )
-from rchat.views.message.helpers import get_message_sender, create_and_send_message
+from rchat.views.message.helpers import (
+    create_and_send_message,
+    get_message_sender,
+)
+from rchat.views.message.models import UserCreatedChat
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Chat"])
@@ -123,7 +124,11 @@ async def create_group_chat(
         sender_chat_id=chat.id,
     )
     await create_and_send_message(
-        message_create=message_create_model, chat=chat
+        message_create=message_create_model,
+        chat=chat,
+        chat_created_by=UserCreatedChat(
+            id=owner_user.id, first_name=owner_user.first_name
+        ),
     )
 
     return CreateGroupChatResponse(

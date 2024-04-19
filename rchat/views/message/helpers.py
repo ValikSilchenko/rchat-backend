@@ -1,9 +1,10 @@
 import logging
+from typing import Optional
 
 from pydantic import UUID4, UUID5
 
 from rchat.clients.socketio_client import SocketioEventsEnum, sio
-from rchat.schemas.chat import Chat, ChatTypeEnum, ChatCreate
+from rchat.schemas.chat import Chat, ChatCreate, ChatTypeEnum
 from rchat.schemas.message import Message, MessageCreate
 from rchat.state import app_state
 from rchat.views.chat.helpers import get_chat_name
@@ -13,6 +14,7 @@ from rchat.views.message.models import (
     MessageResponse,
     MessageSender,
     NewMessageResponse,
+    UserCreatedChat,
 )
 
 logger = logging.getLogger(__name__)
@@ -104,7 +106,11 @@ async def get_message_sender(message: Message) -> MessageSender:
     )
 
 
-async def create_and_send_message(message_create: MessageCreate, chat: Chat):
+async def create_and_send_message(
+    message_create: MessageCreate,
+    chat: Chat,
+    chat_created_by: Optional[UserCreatedChat] = None,
+):
     """
     Создаёт сообщение из переданной модели
     и отправляет его всем участникам чата.
@@ -129,6 +135,7 @@ async def create_and_send_message(message_create: MessageCreate, chat: Chat):
             avatar_photo_url=chat_avatar,
             description=chat.description,
             created_at=chat.created_timestamp,
+            created_by=chat_created_by,
         ),
         sender=await get_message_sender(message),
         created_at=message.created_timestamp,
