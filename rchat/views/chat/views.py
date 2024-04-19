@@ -72,32 +72,39 @@ async def create_group_chat(
     group_chat_info: CreateGroupChatBody,
     session: Session = Depends(check_access_token),
 ):
+    owner_user = await app_state.user_repo.get_by_id(id_=session.user_id)
     not_found_users = []
-    for user_id in group_chat_info.user_id_list:
+    user_first_names = owner_user.first_name
+    for i, user_id in enumerate(group_chat_info.user_id_list):
         user = await app_state.user_repo.get_by_id(id_=user_id)
         if not user:
             not_found_users.append(user_id)
+        if i < 4:
+            user_first_names += f", {user.first_name}"
+
     if not_found_users:
         logger.error(
             "Some users not found. not_found_users=%s, chat_owner=%s",
             not_found_users,
-            session.user_id,
+            owner_user.id,
         )
         return CreateGroupChatResponse(
             status=CreateGroupChatStatusEnum.users_not_found,
             users_not_found=not_found_users,
         )
 
+    chat_name = (
+        group_chat_info.name if group_chat_info.name else user_first_names
+    )
     chat = await app_state.chat_repo.create_chat(
         chat_type=ChatTypeEnum.group,
-        chat_name=group_chat_info.name,
+        chat_name=chat_name,
         description=group_chat_info.description,
         is_work_chat=group_chat_info.is_work_chat,
         allow_messages_from=group_chat_info.allow_messages_from,
         allow_messages_to=group_chat_info.allow_messages_to,
     )
 
-    owner_user = await app_state.user_repo.get_by_id(id_=session.user_id)
     for user_id in group_chat_info.user_id_list:
         await app_state.chat_repo.add_chat_participant(
             chat_id=chat.id, user_id=user_id, added_by_user=owner_user.id
@@ -125,5 +132,8 @@ async def create_group_chat(
     )
 
     return CreateGroupChatResponse(
-        chat_id=chat.id, chat_name=chat.name, users_not_found=[]
+        chat_id=chat.id,
+        chat_name=chat.name,
+        is_work_chat=chat.is_work_chat,
+        users_not_found=[],
     )
