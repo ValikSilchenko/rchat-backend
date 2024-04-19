@@ -17,7 +17,10 @@ from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
 from rchat.views.chat.helpers import get_chat_name
-from rchat.views.message.helpers import get_message_sender, get_chat_messages_list
+from rchat.views.message.helpers import (
+    get_chat_messages_list,
+    get_message_sender,
+)
 from rchat.views.message.models import (
     ChatInfo,
     ChatMessagesResponse,
@@ -28,7 +31,6 @@ from rchat.views.message.models import (
 )
 
 logger = logging.getLogger(__name__)
-
 router = APIRouter(tags=["Message"])
 
 
@@ -177,7 +179,6 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
             id=chat.id,
             type=chat.type,
             avatar_photo_url=chat_avatar,
-            description=chat.description,
             created_at=chat.created_timestamp,
         ),
         sender=await get_message_sender(message),

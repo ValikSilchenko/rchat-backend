@@ -2,11 +2,15 @@ from pydantic import UUID4
 
 from rchat.schemas.message import Message
 from rchat.state import app_state
-from rchat.views.message.models import MessageSender, MessageResponse, ForeignMessage
+from rchat.views.message.models import (
+    ForeignMessage,
+    MessageResponse,
+    MessageSender,
+)
 
 
 async def get_chat_messages_list(
-       chat_id: UUID4, limit: int, last_order_id: int
+    chat_id: UUID4, limit: int, last_order_id: int
 ):
     """
     Вспомогательный метод для получения списка сообщений.
@@ -20,7 +24,9 @@ async def get_chat_messages_list(
             id_=message.forwarded_message
         )
         if forwarded_msg:
-            forwarded_msg_sender = await app_state.get_message_sender(forwarded_msg)
+            forwarded_msg_sender = await app_state.get_message_sender(
+                forwarded_msg
+            )
             forwarded_message = ForeignMessage(
                 id=forwarded_msg.id,
                 type=forwarded_msg.type,

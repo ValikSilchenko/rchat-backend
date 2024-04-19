@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from pydantic import UUID4, BaseModel, Field, UUID5
+from pydantic import UUID4, UUID5, BaseModel, Field
 
 from rchat.views.auth.models import UserDataPatternEnum
 
