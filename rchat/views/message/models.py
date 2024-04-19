@@ -60,7 +60,7 @@ class ChatInfo(BaseModel):
     type: ChatTypeEnum
     name: str | None = None
     created_by: UserCreatedChat
-    avatar_photo_url: str | None
+    avatar_photo_url: str | None = None
     created_at: datetime
 
 

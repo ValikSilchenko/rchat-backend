@@ -7,7 +7,7 @@ from rchat.clients.socketio_client import SocketioEventsEnum, sio
 from rchat.schemas.chat import Chat, ChatCreate, ChatTypeEnum
 from rchat.schemas.message import Message, MessageCreate
 from rchat.state import app_state
-from rchat.views.chat.helpers import get_chat_name
+from rchat.views.chat.helpers import get_chat_name_and_avatar
 from rchat.views.message.models import (
     ChatInfo,
     ForeignMessage,
@@ -121,18 +121,12 @@ async def create_and_send_message(
     chat_participants = await app_state.chat_repo.get_chat_participant_users(
         chat_id=chat.id
     )
-    chat_avatar = (
-        app_state.media_repo.get_media_url(id_=chat.avatar_photo_id)
-        if chat.avatar_photo_id
-        else None
-    )
 
     message_response = NewMessageResponse(
         **message.model_dump(),
         chat=ChatInfo(
             id=chat.id,
             type=chat.type,
-            avatar_photo_url=chat_avatar,
             description=chat.description,
             created_at=chat.created_timestamp,
             created_by=chat_created_by,
@@ -143,9 +137,11 @@ async def create_and_send_message(
     for participant in chat_participants:
         if participant in sio.users:
             logger.info("Message sent to user. user_id=%s", participant)
-            message_response.chat.name = await get_chat_name(
+            chat_data = await get_chat_name_and_avatar(
                 chat=chat, user_id=participant
             )
+            message_response.chat.name = chat_data[0]
+            message_response.chat.avatar_photo_url = chat_data[1]
             await sio.emit(
                 event=SocketioEventsEnum.new_message,
                 data=message_response.model_dump_json(),
