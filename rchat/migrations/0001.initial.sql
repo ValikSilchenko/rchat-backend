@@ -52,9 +52,13 @@ create table "geoip" (
 create table "chat" (
     id uuid primary key,
     type varchar(16) not null,
-    name varchar(32) not null,
+    name varchar(32),
+    created_by uuid references "user" ("id"),
     avatar_photo_id uuid references "media" ("id"),
     description varchar(256),
+    is_work_chat bool not null default false,
+    allow_messages_from time,
+    allow_messages_to time,
     created_timestamp timestamp not null default now()
 );
 
@@ -82,6 +86,7 @@ create index idx_message_order_id on "message" ("order_id");
 create table "chat_user" (
     chat_id uuid references "chat" ("id"),
     user_id uuid references "user" ("id"),
+    added_by_user uuid references "user" ("id"),
     is_chat_owner bool not null default false,
     last_available_message uuid references "message" ("id"),
     created_timestamp timestamp not null default now(),

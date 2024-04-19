@@ -1,8 +1,10 @@
-from datetime import datetime
+from datetime import datetime, time
+from enum import StrEnum
 
-from pydantic import UUID4, BaseModel
+from pydantic import UUID4, UUID5, BaseModel
 
-from rchat.schemas.models import ChatTypeEnum, MessageTypeEnum
+from rchat.schemas.chat import ChatTypeEnum
+from rchat.schemas.message import MessageTypeEnum
 from rchat.views.message.models import MessageSender
 
 
@@ -26,9 +28,34 @@ class ChatListItem(BaseModel):
     id: UUID4
     name: str
     type: ChatTypeEnum
+    is_work_chat: bool = False
+    allow_messages_from: time | None
+    allow_messages_to: time | None
     last_message: LastChatMessage | None
     avatar_photo_url: str | None
 
 
 class ChatListResponse(BaseModel):
     chat_list: list[ChatListItem]
+
+
+class CreateGroupChatBody(BaseModel):
+    user_id_list: list[UUID5]
+    name: str | None = None
+    description: str | None = None
+    is_work_chat: bool = False
+    allow_messages_from: time | None = None
+    allow_messages_to: time | None = None
+
+
+class CreateGroupChatStatusEnum(StrEnum):
+    ok = "ok"
+    users_not_found = "users_not_found"
+
+
+class CreateGroupChatResponse(BaseModel):
+    status: CreateGroupChatStatusEnum = CreateGroupChatStatusEnum.ok
+    chat_id: UUID4 | None = None
+    chat_name: str | None = None
+    is_work_chat: bool
+    users_not_found: list[UUID5]

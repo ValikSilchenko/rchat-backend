@@ -5,19 +5,15 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.openapi.models import Response
 from starlette import status
 
-from rchat.schemas.models import Session
+from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import (
     check_refresh_token,
     generate_tokens,
-    get_login_type, check_access_token,
+    get_user_by_login,
+    check_access_token,
 )
-from rchat.views.auth.models import (
-    AuthBody,
-    AuthResponse,
-    CreateUserData,
-    LoginTypeEnum,
-)
+from rchat.views.auth.models import AuthBody, AuthResponse, CreateUserData
 
 logger = logging.getLogger(__name__)
 
@@ -37,23 +33,10 @@ async def auth(
     :param x_forwarded_for:
     :return: токены доступа и обновления (access_token и refresh_token)
     """
-    login_type = get_login_type(login=body.login)
-
-    match login_type:
-        case LoginTypeEnum.email:
-            user = await app_state.user_repo.get_by_email(email=body.login)
-        case LoginTypeEnum.public_id:
-            user = await app_state.user_repo.get_by_public_id(
-                public_id=body.login
-            )
-        case _:
-            logger.error("Invalid login type. login=%s", body.login)
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    user = await get_user_by_login(login=body.login)
 
     if not user:
-        logger.error(
-            "User not found. login_type=%s, login=%s", login_type, body.login
-        )
+        logger.error("User not found. login=%s", body.login)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     encrypted_password = sha256(

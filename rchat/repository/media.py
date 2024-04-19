@@ -3,7 +3,7 @@ from typing import Optional
 from asyncpg import Pool
 from pydantic import UUID4
 
-from rchat.schemas.models import Media
+from rchat.schemas.media import Media
 
 
 class MediaRepository:

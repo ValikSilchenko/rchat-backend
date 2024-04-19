@@ -4,14 +4,9 @@ from secrets import token_hex
 from typing import Optional
 
 from asyncpg import Pool
-from pydantic import UUID3, UUID4, UUID5, BaseModel
+from pydantic import UUID3, UUID4, UUID5
 
-from rchat.schemas.models import User
-
-
-class UserFind(BaseModel):
-    public_id: str
-    avatar_url: str | None = None
+from rchat.schemas.user import User, UserFind
 
 
 class UserRepository:
@@ -122,10 +117,10 @@ class UserRepository:
          которого нужно исключить из результатов поиска,
          позволяет исключить поиск самого себя в том числе
         :return: список найденных пользователей,
-         для каждого пользователя возвращается его public_id и аватар
+         для каждого пользователя возвращается его id, public_id и аватар
         """
         sql = f"""
-            select "public_id" from "user"
+            select "id", "public_id", "avatar_photo_id" from "user"
             where "public_id" like '@%' || $1 || '%'
             and {'"id" <> $2' if except_user_id else True}
             order by

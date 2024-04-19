@@ -2,18 +2,10 @@ import uuid
 from typing import Optional
 
 from asyncpg import Pool
-from pydantic import UUID4, UUID5, BaseModel
+from pydantic import UUID4, UUID5
 
 from rchat.repository.helpers import build_model
-from rchat.schemas.models import Session
-
-
-class SessionCreate(BaseModel):
-    id: UUID4
-    user_id: UUID5
-    ip: str | None = None
-    user_agent: str | None
-    is_active: bool
+from rchat.schemas.session import Session, SessionCreate
 
 
 class SessionRepository:
