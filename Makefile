@@ -3,6 +3,11 @@ venv:
 	python -m venv venv
 	./venv/bin/pip install -r requirements.txt
 
+lint:
+	./venv/bin/black --check -l 79 locals
+	./venv/bin/flake8 locals
+	./venv/bin/isort -c --src locals --profile black -l 79 locals
+
 lint-win:
 	./venv/Scripts/black --check -l 79 rchat
 	./venv/Scripts/flake8 rchat
