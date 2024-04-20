@@ -36,6 +36,11 @@ class Chat(BaseModel):
     created_timestamp: datetime
 
 
+class UserCreatedChat(BaseModel):
+    id: UUID5
+    first_name: str
+
+
 class ChatParticipant(BaseModel):
     chat_id: UUID4
     user_id: UUID5

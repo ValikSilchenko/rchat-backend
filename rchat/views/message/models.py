@@ -3,7 +3,7 @@ from enum import StrEnum
 
 from pydantic import UUID4, UUID5, BaseModel
 
-from rchat.schemas.chat import ChatTypeEnum
+from rchat.schemas.chat import ChatTypeEnum, UserCreatedChat
 from rchat.schemas.message import MessageTypeEnum
 
 
@@ -44,11 +44,6 @@ class ForeignMessage(BaseModel):
     type: MessageTypeEnum
     message_text: str | None = None
     sender: MessageSender
-
-
-class UserCreatedChat(BaseModel):
-    id: UUID5
-    first_name: str
 
 
 class ChatInfo(BaseModel):
