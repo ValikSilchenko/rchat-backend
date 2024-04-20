@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import UUID4, UUID5, BaseModel
+from pydantic import UUID4, UUID5, BaseModel, Field
 
 
 class MessageTypeEnum(StrEnum):
@@ -29,7 +29,7 @@ class Message(BaseModel):
 
 
 class MessageCreate(BaseModel):
-    id: UUID4 = uuid.uuid4()
+    id: UUID4 = Field(default_factory=lambda: uuid.uuid4())
     type: MessageTypeEnum
     chat_id: UUID4
     sender_user_id: UUID5 | None = None
