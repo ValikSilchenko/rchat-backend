@@ -150,5 +150,6 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
         sender_user_id=sender_user_id,
     )
     await create_and_send_message(
-        message_create=message_create_model, chat=chat
+        message_create=message_create_model,
+        chat=chat,
     )

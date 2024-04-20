@@ -9,6 +9,7 @@ from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
 from rchat.views.chat.helpers import get_chat_name_and_avatar
 from rchat.views.chat.models import (
+    BaseChatInfo,
     ChatListItem,
     ChatListResponse,
     CreateGroupChatBody,
@@ -140,14 +141,23 @@ async def create_group_chat(
     await create_and_send_message(
         message_create=message_create_model,
         chat=chat,
-        chat_created_by=UserCreatedChat(
+        group_created_by=UserCreatedChat(
             id=owner_user.id, first_name=owner_user.first_name
         ),
     )
 
+    chat_avatar = (
+        app_state.media_repo.get_media_url(id_=chat.avatar_photo_id)
+        if chat.avatar_photo_id
+        else None
+    )
     return CreateGroupChatResponse(
-        chat_id=chat.id,
-        chat_name=chat.name,
-        is_work_chat=chat.is_work_chat,
-        users_not_found=[],
+        created_chat_info=BaseChatInfo(
+            id=chat.id,
+            name=chat.name,
+            is_work_chat=chat.is_work_chat,
+            allow_messages_from=chat.allow_messages_from,
+            allow_messages_to=chat.allow_messages_to,
+            avatar_photo_url=chat_avatar,
+        )
     )

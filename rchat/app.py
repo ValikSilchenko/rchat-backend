@@ -48,4 +48,5 @@ if __name__ == "__main__":
         port=8080,
         host="0.0.0.0",
         access_log=False,
+        http="h11",
     )
