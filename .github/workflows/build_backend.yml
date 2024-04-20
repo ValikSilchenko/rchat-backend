@@ -2,8 +2,10 @@ name: build_backend_test_image
 
 on:
   workflow_run:
-    workflows: ["lint"]
-    types: [completed]
+    workflows:
+      - lint
+    types:
+      - completed
 
 jobs:
   build_image:
