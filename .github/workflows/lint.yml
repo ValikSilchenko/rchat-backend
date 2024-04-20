@@ -1,0 +1,17 @@
+name: lint
+
+on: [push]
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+        - uses: actions/checkout@v4
+        - name: Set up python
+          uses: actions/setup-python@v4
+          with:
+              python-version: 3.11
+        - run: sudo apt update
+        - run: sudo apt install make -y
+        - run: make venv
+        - name: Lint
+          run: make lint
