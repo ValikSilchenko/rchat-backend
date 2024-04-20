@@ -8,10 +8,10 @@ from starlette import status
 from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import (
+    check_access_token,
     check_refresh_token,
     generate_tokens,
     get_user_by_login,
-    check_access_token,
 )
 from rchat.views.auth.models import AuthBody, AuthResponse, CreateUserData
 
