@@ -15,7 +15,7 @@ services:
       - "4366:5432"
     volumes:
       - "/persistent/postgres-test/data:/var/lib/postgresql/data"
-      - "postgresql_backup:/backups"
+      - "/postgresql_backup:/backups"
     networks:
       - postgres_test
     deploy:
