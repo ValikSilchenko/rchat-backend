@@ -57,4 +57,5 @@ class CreateGroupChatResponse(BaseModel):
     status: CreateGroupChatStatusEnum = CreateGroupChatStatusEnum.ok
     chat_id: UUID4 | None = None
     chat_name: str | None = None
+    is_work_chat: bool | None = None
     users_not_found: list[UUID5]

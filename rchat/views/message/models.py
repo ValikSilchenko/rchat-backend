@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time
 from enum import StrEnum
 
 from pydantic import UUID4, UUID5, BaseModel
@@ -60,6 +60,9 @@ class ChatInfo(BaseModel):
     type: ChatTypeEnum
     name: str | None = None
     created_by: UserCreatedChat | None
+    is_work_chat: bool
+    allow_messages_from: time | None
+    allow_messages_to: time | None
     avatar_photo_url: str | None = None
     created_at: datetime
 

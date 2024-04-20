@@ -140,5 +140,6 @@ async def create_group_chat(
     return CreateGroupChatResponse(
         chat_id=chat.id,
         chat_name=chat.name,
+        is_work_chat=chat.is_work_chat,
         users_not_found=[],
     )
