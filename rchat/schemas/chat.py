@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, time
 from enum import StrEnum
 
-from pydantic import UUID4, UUID5, BaseModel
+from pydantic import UUID4, UUID5, BaseModel, Field
 
 
 class ChatTypeEnum(StrEnum):
@@ -12,7 +12,7 @@ class ChatTypeEnum(StrEnum):
 
 
 class ChatCreate(BaseModel):
-    id: UUID4 = uuid.uuid4()
+    id: UUID4 = Field(default_factory=lambda: uuid.uuid4())
     type: ChatTypeEnum
     name: str | None = None
     created_by: UUID5 | None = None
@@ -34,6 +34,11 @@ class Chat(BaseModel):
     allow_messages_from: time | None
     allow_messages_to: time | None
     created_timestamp: datetime
+
+
+class UserCreatedChat(BaseModel):
+    id: UUID5
+    first_name: str
 
 
 class ChatParticipant(BaseModel):

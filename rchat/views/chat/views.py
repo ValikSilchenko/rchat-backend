@@ -2,7 +2,7 @@ import logging
 
 from fastapi import APIRouter, Depends
 
-from rchat.schemas.chat import ChatCreate, ChatTypeEnum
+from rchat.schemas.chat import ChatCreate, ChatTypeEnum, UserCreatedChat
 from rchat.schemas.message import MessageCreate, MessageTypeEnum
 from rchat.schemas.session import Session
 from rchat.state import app_state
@@ -20,7 +20,6 @@ from rchat.views.message.helpers import (
     create_and_send_message,
     get_message_sender,
 )
-from rchat.views.message.models import UserCreatedChat
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Chat"])
@@ -43,6 +42,14 @@ async def get_chat_list(session: Session = Depends(check_access_token)):
         chat_data = await get_chat_name_and_avatar(
             chat=chat, user_id=session.user_id
         )
+        user_created_chat = None
+        if chat.type != ChatTypeEnum.private:
+            user = await app_state.user_repo.get_by_id(id_=chat.created_by)
+            if user:
+                user_created_chat = UserCreatedChat(
+                    id=user.id, first_name=user.first_name
+                )
+
         chat_list.append(
             ChatListItem(
                 id=chat.id,
@@ -51,6 +58,7 @@ async def get_chat_list(session: Session = Depends(check_access_token)):
                 is_work_chat=chat.is_work_chat,
                 allow_messages_from=chat.allow_messages_from,
                 allow_messages_to=chat.allow_messages_to,
+                created_by=user_created_chat,
                 last_message=(
                     LastChatMessage(
                         id=last_chat_message.id,
@@ -85,7 +93,7 @@ async def create_group_chat(
     user_first_names = owner_user.first_name
     for i, user_id in enumerate(group_chat_info.user_id_list):
         user = await app_state.user_repo.get_by_id(id_=user_id)
-        if not user:
+        if not user or user.id == owner_user.id:
             not_found_users.append(user_id)
         if i < 4:
             user_first_names += f", {user.first_name}"

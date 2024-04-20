@@ -3,7 +3,7 @@ from enum import StrEnum
 
 from pydantic import UUID4, UUID5, BaseModel
 
-from rchat.schemas.chat import ChatTypeEnum
+from rchat.schemas.chat import ChatTypeEnum, UserCreatedChat
 from rchat.schemas.message import MessageTypeEnum
 from rchat.views.message.models import MessageSender
 
@@ -31,6 +31,7 @@ class ChatListItem(BaseModel):
     is_work_chat: bool = False
     allow_messages_from: time | None
     allow_messages_to: time | None
+    created_by: UserCreatedChat | None
     last_message: LastChatMessage | None
     avatar_photo_url: str | None
 
@@ -57,5 +58,5 @@ class CreateGroupChatResponse(BaseModel):
     status: CreateGroupChatStatusEnum = CreateGroupChatStatusEnum.ok
     chat_id: UUID4 | None = None
     chat_name: str | None = None
-    is_work_chat: bool
+    is_work_chat: bool | None = None
     users_not_found: list[UUID5]
