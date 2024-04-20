@@ -14,6 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: |
+          echo "username: ${{vars.CI_REGISTRY_USERNAME}} "
+          echo "password: ${{vars.CI_REGISTRY_PASSWORD}} "
+          echo "username: ${{env.CI_REGISTRY_USERNAME}} "
+          echo "password: ${{env.CI_REGISTRY_PASSWORD}} "
       - name: Login in docker registry
         uses: docker/login-action@v3
         with:
