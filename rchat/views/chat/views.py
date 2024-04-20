@@ -140,9 +140,10 @@ async def create_group_chat(
     await create_and_send_message(
         message_create=message_create_model,
         chat=chat,
-        chat_created_by=UserCreatedChat(
+        group_created_by=UserCreatedChat(
             id=owner_user.id, first_name=owner_user.first_name
         ),
+        is_chat_created=True,
     )
 
     return CreateGroupChatResponse(

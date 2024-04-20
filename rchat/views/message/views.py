@@ -87,6 +87,7 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
     async with sio.session(sid) as io_session:
         sender_user_id = io_session["user_id"]
 
+    is_chat_created = False
     if message_body.other_user_public_id:
         other_user = await app_state.user_repo.get_by_public_id(
             message_body.other_user_public_id
@@ -107,7 +108,7 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
             )
             return
 
-        chat = await get_private_chat_for_new_message(
+        chat, is_chat_created = await get_private_chat_for_new_message(
             user_id_1=sender_user_id, user_id_2=other_user.id
         )
     elif message_body.chat_id:
@@ -150,5 +151,7 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
         sender_user_id=sender_user_id,
     )
     await create_and_send_message(
-        message_create=message_create_model, chat=chat
+        message_create=message_create_model,
+        chat=chat,
+        is_chat_created=is_chat_created,
     )

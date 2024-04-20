@@ -1,11 +1,11 @@
 import logging
-from typing import Optional
+from typing import Optional, Tuple
 
 from pydantic import UUID4, UUID5
 
 from rchat.clients.socketio_client import SocketioEventsEnum, sio
 from rchat.schemas.chat import Chat, ChatCreate, ChatTypeEnum
-from rchat.schemas.message import Message, MessageCreate
+from rchat.schemas.message import Message, MessageCreate, MessageTypeEnum
 from rchat.state import app_state
 from rchat.views.chat.helpers import get_chat_name_and_avatar
 from rchat.views.message.models import (
@@ -109,7 +109,8 @@ async def get_message_sender(message: Message) -> MessageSender:
 async def create_and_send_message(
     message_create: MessageCreate,
     chat: Chat,
-    chat_created_by: Optional[UserCreatedChat] = None,
+    group_created_by: Optional[UserCreatedChat] = None,
+    is_chat_created: bool = False,
 ):
     """
     Создаёт сообщение из переданной модели
@@ -122,18 +123,22 @@ async def create_and_send_message(
         chat_id=chat.id
     )
 
-    message_response = NewMessageResponse(
-        **message.model_dump(),
-        chat=ChatInfo(
+    chat_info = None
+    if is_chat_created:
+        chat_info = ChatInfo(
             id=chat.id,
             type=chat.type,
             description=chat.description,
             created_at=chat.created_timestamp,
-            created_by=chat_created_by,
+            created_by=group_created_by,
             is_work_chat=chat.is_work_chat,
             allow_messages_from=chat.allow_messages_from,
             allow_messages_to=chat.allow_messages_to,
-        ),
+        )
+
+    message_response = NewMessageResponse(
+        **message.model_dump(),
+        chat=chat_info,
         sender=await get_message_sender(message),
         created_at=message.created_timestamp,
     )
@@ -154,7 +159,7 @@ async def create_and_send_message(
 
 async def get_private_chat_for_new_message(
     user_id_1: UUID5, user_id_2: UUID5
-) -> Chat:
+) -> tuple[Chat, bool]:
     """
     Получает чат типа private для двух переданных пользователей.
     Если такого чата нету, то он создаётся,
@@ -163,6 +168,7 @@ async def get_private_chat_for_new_message(
     chat = await app_state.chat_repo.get_private_chat_with_users(
         users_id_list=[user_id_1, user_id_2]
     )
+    is_created = False
     if not chat:
         chat = await app_state.chat_repo.create_chat(
             create_model=ChatCreate(type=ChatTypeEnum.private)
@@ -173,5 +179,6 @@ async def get_private_chat_for_new_message(
         await app_state.chat_repo.add_chat_participant(
             chat_id=chat.id, user_id=user_id_2
         )
+        is_created = True
 
-    return chat
+    return chat, is_created
