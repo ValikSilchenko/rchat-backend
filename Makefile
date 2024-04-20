@@ -1,3 +1,8 @@
+venv:
+	rm -rf venv
+	python -m venv venv
+	./venv/bin/pip install -r requirements.txt
+
 lint-win:
 	./venv/Scripts/black --check -l 79 rchat
 	./venv/Scripts/flake8 rchat
