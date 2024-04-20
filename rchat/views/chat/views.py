@@ -144,7 +144,6 @@ async def create_group_chat(
         group_created_by=UserCreatedChat(
             id=owner_user.id, first_name=owner_user.first_name
         ),
-        is_chat_created=True,
     )
 
     chat_avatar = (
