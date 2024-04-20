@@ -7,6 +7,11 @@ on:
     types:
       - completed
   workflow_dispatch:
+    inputs:
+      tags:
+        description: 'tags'
+        required: false
+
 
 
 jobs:
@@ -14,22 +19,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          echo "username: ${{vars.CI_REGISTRY_USERNAME}} "
-          echo "password: ${{vars.CI_REGISTRY_PASSWORD}} "
-          echo "username: ${{env.CI_REGISTRY_USERNAME}} "
-          echo "password: ${{env.CI_REGISTRY_PASSWORD}} "
       - name: Login in docker registry
-        uses: docker/login-action@v3
-        with:
-          username: ${{vars.CI_REGISTRY_USERNAME}}
-          password: ${{vars.CI_REGISTRY_PASSWORD}}
-      - name: Set up build
-        uses: docker/setup-buildx-action@v3
-      - name: Build and push image
-        uses: docker/build-push-action@v5
-        with:
-          context: deployments/app
-          file: deployments/app/Dockerfile
-          push: true
-          tags: ${{vars.CI_REGISTRY_HOST}}/rchat-test
+        run: docker login -u ${{vars.CI_REGISTRY_USERNAME}} -p ${{vars.CI_REGISTRY_PASSWORD}}
+      - name: Build image
+        run: docker build -f deployments/app -t ${{vars.CI_REGISTRY_HOST}}/rchat-test deployments/app
+      - name: Push image
+        run: docker push ${{vars.CI_REGISTRY_HOST}}/rchat-test
