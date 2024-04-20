@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+  backend:
+    container_name: backend_test
+    image: ${IMAGE_NAME}
+    env_file: test.env
+    volumes:
+      - "../../storage:/app/storage"
+    networks:
+      - postgres_test
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 7s
+        max_attempts: 3
+        window: 60s
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 100M
+    logging:
+      driver: local
+
+networks:
+  postgres_test:
+    driver: overlay
+    external: true
+

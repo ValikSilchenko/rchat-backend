@@ -108,8 +108,7 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
             return
 
         chat = await get_private_chat_for_new_message(
-            user_id_1=sender_user_id,
-            user_id_2=other_user.id
+            user_id_1=sender_user_id, user_id_2=other_user.id
         )
     elif message_body.chat_id:
         chat = await app_state.chat_repo.get_by_id(

@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  registry:
+    image: registry:2.7.0
+    ports:
+      - "443:443"
+    environment:
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry-Realm
+      REGISTRY_AUTH_HTPASSWD_PATH: ${HTPASSWD_PATH}
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: ${ROOT_DIR}
+      REGISTRY_HTTP_TLS_CERTIFICATE: ${TLS_CERT}
+      REGISTRY_HTTP_TLS_KEY: ${TLS_KEY}
+    volumes:
+      - "/docker_repo:/var/lib/registry"
+      - "./auth:/auth"
+      - "/certs:/certs"
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 50M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+        window: 60s
+    logging:
+      driver: local
+

@@ -20,6 +20,25 @@ from rchat.views.message.models import (
 logger = logging.getLogger(__name__)
 
 
+async def get_foreign_message(
+    message_id: Optional[UUID4],
+) -> Optional[ForeignMessage]:
+    if not message_id:
+        return
+
+    message = await app_state.message_repo.get_by_id(id_=message_id)
+    if not message:
+        return
+
+    message_sender = await get_message_sender(message)
+    return ForeignMessage(
+        id=message.id,
+        type=message.type,
+        message_text=message.message_text,
+        sender=message_sender,
+    )
+
+
 async def get_chat_messages_list(
     chat_id: UUID4, limit: int, last_order_id: int
 ):
@@ -31,35 +50,10 @@ async def get_chat_messages_list(
     )
     response_messages = []
     for message in messages:
-        forwarded_msg = await app_state.message_repo.get_by_id(
-            id_=message.forwarded_message
+        forwarded_message = await get_foreign_message(
+            message.forwarded_message
         )
-        if forwarded_msg:
-            forwarded_msg_sender = await app_state.get_message_sender(
-                forwarded_msg
-            )
-            forwarded_message = ForeignMessage(
-                id=forwarded_msg.id,
-                type=forwarded_msg.type,
-                message_text=forwarded_msg.message_text,
-                sender=forwarded_msg_sender,
-            )
-        else:
-            forwarded_message = None
-
-        replied_msg = await app_state.message_repo.get_by_id(
-            id_=message.reply_to_message
-        )
-        if replied_msg:
-            replied_msg_sender = await get_message_sender(replied_msg)
-            reply_to_message = ForeignMessage(
-                id=replied_msg.id,
-                type=replied_msg.type,
-                message_text=replied_msg.message_text,
-                sender=replied_msg_sender,
-            )
-        else:
-            reply_to_message = None
+        reply_to_message = await get_foreign_message(message.reply_to_message)
 
         message_sender = await get_message_sender(message)
         response_messages.append(
