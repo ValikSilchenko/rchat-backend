@@ -1,23 +1,26 @@
 name: build_backend_test_image
 
 on:
-  push:
   workflow_run:
     workflows: ["lint"]
-    types:
-      - completed
-  workflow_dispatch:
+    types: [completed]
 
 jobs:
   build_image:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up docker
-        uses: actions/docker@v4
-      - name: Build image
-        run: docker build -f deployments/app/Dockerfile -t ${{env.CI_REGISTRY_HOST}}/rchat-test deployments/app
-      - name: Push image
-        run: |
-          docker login -u ${{env.CI_REGISTRY_USER}} -p ${{env.CI_REGISTRY_PASSWORD}} ${{env.CI_REGISTRY_HOST}}
-          docker push ${{env.CI_REGISTRY_HOST}}/rchat-test
+      - name: Login in docker registry
+        uses: docker/login-action@v3
+        with:
+          username: ${{env.CI_REGISTRY_USERNAME}}
+          password: ${{env.CI_REGISTRY_PASSWORD}}
+      - name: Set up build
+        uses: docker/setup-buildx-action@v3
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: deployments/app
+          file: deployments/app/Dockerfile
+          push: true
+          tags: ${{env.CI_REGISTRY_HOST}}/rchat-test
