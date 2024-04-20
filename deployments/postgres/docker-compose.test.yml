@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+  postgres:
+    container_name: postgres_test
+    image: postgres:16
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_DB: rchat_test
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: qdaasgwerradfw123c4$q2
+    ports:
+      - "4366:5432"
+    volumes:
+      - "/persistent/postgres-test/data:/var/lib/postgresql/data"
+      - "postgresql_backup:/backups"
+    networks:
+      - postgres_test
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 60s
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 200M
+    logging:
+      driver: local
+
+networks:
+  postgres_test:
+    driver: overlay
+    external: true
+
+
