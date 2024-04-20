@@ -85,7 +85,7 @@ async def create_group_chat(
     user_first_names = owner_user.first_name
     for i, user_id in enumerate(group_chat_info.user_id_list):
         user = await app_state.user_repo.get_by_id(id_=user_id)
-        if not user:
+        if not user or user.id == owner_user.id:
             not_found_users.append(user_id)
         if i < 4:
             user_first_names += f", {user.first_name}"
@@ -140,6 +140,5 @@ async def create_group_chat(
     return CreateGroupChatResponse(
         chat_id=chat.id,
         chat_name=chat.name,
-        is_work_chat=chat.is_work_chat,
         users_not_found=[],
     )
