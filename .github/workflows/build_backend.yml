@@ -20,8 +20,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Login in docker registry
-        run: docker login ${{vars.CI_REGISTRY_HOST}} -u ${{vars.CI_REGISTRY_USERNAME}} -p ${{vars.CI_REGISTRY_PASSWORD}}
+        run: echo ${{vars.CI_REGISTRY_PASSWORD}} | docker login ${{vars.CI_REGISTRY_HOST}} -u ${{vars.CI_REGISTRY_USERNAME}} --password-stdin
       - name: Build image
-        run: docker build -f deployments/app -t ${{vars.CI_REGISTRY_HOST}}/rchat-test deployments/app
+        run: docker build -f deployments/app/Dockerfile -t ${{vars.CI_REGISTRY_HOST}}/rchat-test deployments/app
       - name: Push image
         run: docker push ${{vars.CI_REGISTRY_HOST}}/rchat-test
