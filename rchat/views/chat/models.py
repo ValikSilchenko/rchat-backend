@@ -20,20 +20,27 @@ class LastChatMessage(BaseModel):
     sender: MessageSender
 
 
-class ChatListItem(BaseModel):
+class BaseChatInfo(BaseModel):
     """
-    Элемент списка чатов для метода получения чатов пользователя.
+    Модель базовой информации о чате.
     """
 
     id: UUID4
     name: str
-    type: ChatTypeEnum
     is_work_chat: bool = False
-    allow_messages_from: time | None
-    allow_messages_to: time | None
+    allow_messages_from: time | None = None
+    allow_messages_to: time | None = None
+    avatar_photo_url: str | None
+
+
+class ChatListItem(BaseChatInfo):
+    """
+    Элемент списка чатов для метода получения чатов пользователя.
+    """
+
+    type: ChatTypeEnum
     created_by: UserCreatedChat | None
     last_message: LastChatMessage | None
-    avatar_photo_url: str | None
 
 
 class ChatListResponse(BaseModel):
@@ -56,7 +63,5 @@ class CreateGroupChatStatusEnum(StrEnum):
 
 class CreateGroupChatResponse(BaseModel):
     status: CreateGroupChatStatusEnum = CreateGroupChatStatusEnum.ok
-    chat_id: UUID4 | None = None
-    chat_name: str | None = None
-    is_work_chat: bool | None = None
-    users_not_found: list[UUID5]
+    users_not_found: list[UUID5] = []
+    created_chat_info: BaseChatInfo | None = None
