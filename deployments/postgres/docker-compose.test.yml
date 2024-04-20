@@ -14,7 +14,7 @@ services:
     ports:
       - "4366:5432"
     volumes:
-      - "/persistent/postgres-test/data:/var/lib/postgresql/data"
+      - "/persistent/postgres_test/data:/var/lib/postgresql/data"
       - "/postgresql_backup:/backups"
     networks:
       - postgres_test
