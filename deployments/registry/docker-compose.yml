@@ -4,7 +4,7 @@ services:
   registry:
     image: registry:2.7.0
     ports:
-      - "5000:5000"
+      - "443:443"
     environment:
       REGISTRY_AUTH: htpasswd
       REGISTRY_AUTH_HTPASSWD_REALM: Registry-Realm
