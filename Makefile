@@ -4,9 +4,9 @@ venv:
 	./venv/bin/pip install -r requirements.txt
 
 lint:
-	./venv/bin/black --check -l 79 locals
-	./venv/bin/flake8 locals
-	./venv/bin/isort -c --src locals --profile black -l 79 locals
+	./venv/bin/black --check -l 79 rchat
+	./venv/bin/flake8 rchat
+	./venv/bin/isort -c --src rchat --profile black -l 79 rchat
 
 lint-win:
 	./venv/Scripts/black --check -l 79 rchat
