@@ -4,8 +4,8 @@ services:
   registry:
     image: registry:2.7.0
     build:
-      context: deployments/registry
-      dockerfile: deployments/registry/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "443:443"
     environment:
