@@ -3,6 +3,10 @@ name: Deploy template
 on:
   workflow_call:
 
+env:
+  SSH_PRIVATE_KEY: ${{vars.SSH_PRIVATE_KEY}}
+  SSH_KNOWN_HOSTS: ${{vars.SSH_KNOWN_HOSTS}}
+
 jobs:
   setup_ssh:
     runs-on: ubuntu-latest
@@ -10,12 +14,13 @@ jobs:
       - name: Set up ssh
         run: |
           touch ~/id_rsa
-          echo "${{vars.SSH_PRIVATE_KEY}}" > ~/id_rsa
+          echo "$SSH_PRIVATE_KEY" > ~/id_rsa
           chmod 400 ~/id_rsa
           ssh-add "~/id_rsa"
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          cp "${{vars.SSH_KNOWN_HOSTS}}" ~/.ssh/known_hosts
+          touch ~/.ssh/known_hosts
+          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
       - name: Login in docker hub
