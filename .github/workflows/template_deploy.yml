@@ -1,0 +1,19 @@
+name: Deploy template
+
+runs:
+  using: composite
+  steps:
+    - name: Set up ssh
+      run: |
+        chmod 400 ${{vars.SSH_PRIVATE_KEY}}
+        ssh-add "${{vars.SSH_PRIVATE_KEY}}"
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        cp "${{vars.SSH_KNOWN_HOSTS}}" ~/.ssh/known_hosts
+        chmod 644 ~/.ssh/known_hosts
+        chmod 644 ~/.ssh/known_hosts
+    - name: Login in docker hub
+      run: |
+        docker context create swarm-cluster --docker "host=ssh://${{vars.DOCKER_SWARM_MASTER_SSH}}"
+        docker context use swarm-cluster
+        echo ${{vars.CI_REGISTRY_PASSWORD}} | docker login ${{vars.CI_REGISTRY_HOST}} -u ${{vars.CI_REGISTRY_USERNAME}} --password-stdin

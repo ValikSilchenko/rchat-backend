@@ -1,4 +1,4 @@
-name: build_backend_test_image
+name: Build backend test
 
 on:
   workflow_run:
@@ -12,7 +12,8 @@ on:
         description: 'tags'
         required: false
 
-
+env:
+  IMAGE_NAME: ${{vars.CI_REGISTRY_HOST}}/rchat-test:${{github.SHA}}-test
 
 jobs:
   build_image:
@@ -22,6 +23,6 @@ jobs:
       - name: Login in docker registry
         run: echo ${{vars.CI_REGISTRY_PASSWORD}} | docker login ${{vars.CI_REGISTRY_HOST}} -u ${{vars.CI_REGISTRY_USERNAME}} --password-stdin
       - name: Build image
-        run: docker build -f deployments/app/Dockerfile -t ${{vars.CI_REGISTRY_HOST}}/rchat-test .
+        run: docker build -f deployments/app/Dockerfile -t $IMAGE_NAME .
       - name: Push image
-        run: docker push ${{vars.CI_REGISTRY_HOST}}/rchat-test
+        run: docker push $IMAGE_NAME

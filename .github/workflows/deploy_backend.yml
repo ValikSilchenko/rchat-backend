@@ -1,0 +1,18 @@
+name: Deploy backend test
+
+on:
+  workflow_run:
+    workflows:
+      - Build backend test
+    types:
+      - completed
+
+jobs:
+  deploy_backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ValikSilchenko/template_deploy@main
+      - name: Deploy backend
+        run: docker stack deploy --compose-file deployments/app/docker-compose.test.yml --with-registry-auth --prune rchat_test
+
