@@ -3,9 +3,6 @@ version: '3'
 services:
   registry:
     image: registry:2.7.0
-    build:
-      context: .
-      dockerfile: Dockerfile
     ports:
       - "443:443"
     environment:
@@ -18,7 +15,7 @@ services:
     volumes:
       - "/docker_repo:/var/lib/registry"
       - "./auth:/auth"
-      - "/certs:/certs"
+      - "/certs:/etc/docker/certs.d/rchat-company.ru:5000/cert"
     deploy:
       replicas: 1
       resources:
