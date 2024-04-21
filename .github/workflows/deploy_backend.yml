@@ -9,7 +9,7 @@ on:
 
 jobs:
   setup_ssh:
-    uses: ValikSilchenko/rchat_backend/.github/workflows/template_deploy.yml@master
+    uses: .github/workflows/template_deploy.yml@master
   deploy_backend:
     runs-on: ubuntu-latest
     needs: setup_ssh
