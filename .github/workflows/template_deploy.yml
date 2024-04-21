@@ -9,8 +9,10 @@ jobs:
     steps:
       - name: Set up ssh
         run: |
-          chmod 400 "${{vars.SSH_PRIVATE_KEY}}"
-          ssh-add "${{vars.SSH_PRIVATE_KEY}}"
+          touch /id_rsa
+          echo "${{vars.SSH_PRIVATE_KEY}}" > /id_rsa
+          chmod 400 /id_rsa
+          ssh-add "/id_rsa"
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           cp "${{vars.SSH_KNOWN_HOSTS}}" ~/.ssh/known_hosts

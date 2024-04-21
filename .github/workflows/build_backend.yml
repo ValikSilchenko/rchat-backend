@@ -1,14 +1,12 @@
 name: Build backend test
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows:
       - lint
     types:
       - completed
-  workflow_dispatch:
-    branches:
-      - master
 
 env:
   IMAGE_NAME: ${{vars.CI_REGISTRY_HOST}}/rchat-test:${{github.SHA}}-test
@@ -17,6 +15,7 @@ jobs:
   build_image:
     runs-on: ubuntu-latest
     steps:
+      - run: echo "$IMAGE_NAME"
       - uses: actions/checkout@v4
       - name: Login in docker registry
         run: echo ${{vars.CI_REGISTRY_PASSWORD}} | docker login ${{vars.CI_REGISTRY_HOST}} -u ${{vars.CI_REGISTRY_USERNAME}} --password-stdin
