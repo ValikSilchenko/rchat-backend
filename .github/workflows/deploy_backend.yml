@@ -6,6 +6,9 @@ on:
       - Build backend test
     types:
       - completed
+  workflow_dispatch:
+    branches:
+      - master
 
 jobs:
   setup_ssh:
