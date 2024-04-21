@@ -18,7 +18,7 @@ jobs:
           ls .
           echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ./id_rsa
           chmod 400 ./id_rsa
-          ssh-add "./id_rsa"
+          echo "rchat" | ssh-add -p "./id_rsa"
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           touch ~/.ssh/known_hosts
