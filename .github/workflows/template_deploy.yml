@@ -16,7 +16,7 @@ jobs:
           eval $(ssh-agent -s)
           touch ./id_rsa
           ls .
-          echo "$SSH_PRIVATE_KEY" > ./id_rsa
+          echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ./id_rsa
           chmod 400 ./id_rsa
           ssh-add "./id_rsa"
           mkdir -p ~/.ssh
