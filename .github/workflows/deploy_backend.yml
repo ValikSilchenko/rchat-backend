@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ValikSilchenko/template_deploy@main
+      - uses: ValikSilchenko/rchat_backend/.github/workflows/template_deploy.yml@master
       - name: Deploy backend
         run: docker stack deploy --compose-file deployments/app/docker-compose.test.yml --with-registry-auth --prune rchat_test
 
