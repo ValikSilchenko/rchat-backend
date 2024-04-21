@@ -7,7 +7,6 @@ env:
   SSH_PRIVATE_KEY: ${{vars.SSH_PRIVATE_KEY}}
   SSH_PUBLIC_KEY: ${{vars.SSH_PUBLIC_KEY}}
   SSH_KNOWN_HOSTS: ${{vars.SSH_KNOWN_HOSTS}}
-  SSH_KNOWN_HOSTS_OLD: ${{vars.SSH_KNOWN_HOSTS_OLD}}
 
 jobs:
   setup_ssh:
@@ -24,9 +23,7 @@ jobs:
           chmod 400 .ssh/id_rsa
           chmod 700 .ssh
           touch .ssh/known_hosts
-          touch .ssh/known_hosts.old
           echo "$SSH_KNOWN_HOSTS" > .ssh/known_hosts
-          echo "$SSH_KNOWN_HOSTS_OLD" > .ssh/known_hosts.old
           chmod 644 .ssh/known_hosts
       - name: Login in docker hub
         run: |
