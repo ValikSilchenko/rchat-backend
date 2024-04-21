@@ -8,11 +8,12 @@ on:
       - completed
 
 jobs:
+  setup_ssh:
+    uses: ValikSilchenko/rchat_backend/.github/workflows/template_deploy.yml@master
   deploy_backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ValikSilchenko/rchat_backend/.github/workflows/template_deploy.yml@master
       - name: Deploy backend
         run: docker stack deploy --compose-file deployments/app/docker-compose.test.yml --with-registry-auth --prune rchat_test
 
