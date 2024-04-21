@@ -13,12 +13,18 @@ on:
         required: false
 
 env:
-  IMAGE_NAME: ${{vars.CI_REGISTRY_HOST}}/rchat-test:${{github.SHA}}-test
+  IMAGE_NAME: ${{vars.CI_REGISTRY_HOST}}/rchat-test:${{GITHUB_SHA}}-test
 
 jobs:
   build_image:
     runs-on: ubuntu-latest
     steps:
+      - run: |
+          echo "sha: ${{GITHUB_SHA}}"
+          echo "sha: ${{github.GITHUB_SHA}}"
+          echo "sha: ${{github.SHA}}"
+          echo "sha: ${{github.sha}}"
+          echo "sha: ${{env.GITHUB_SHA}}"
       - uses: actions/checkout@v4
       - name: Login in docker registry
         run: echo ${{vars.CI_REGISTRY_PASSWORD}} | docker login ${{vars.CI_REGISTRY_HOST}} -u ${{vars.CI_REGISTRY_USERNAME}} --password-stdin
