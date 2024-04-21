@@ -26,6 +26,7 @@ jobs:
           chmod 644 ~/.ssh/known_hosts
       - name: Login in docker hub
         run: |
+          ssh ${{vars.DOCKER_SWARM_MASTER_SSH}}
           docker context create swarm-cluster --docker "host=ssh://${{vars.DOCKER_SWARM_MASTER_SSH}}"
           docker context use swarm-cluster
           echo ${{vars.CI_REGISTRY_PASSWORD}} | docker login ${{vars.CI_REGISTRY_HOST}} -u ${{vars.CI_REGISTRY_USERNAME}} --password-stdin
