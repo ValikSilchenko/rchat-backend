@@ -21,10 +21,10 @@ jobs:
           touch .ssh/id_rsa.pub
           echo "$SSH_PUBLIC_KEY" | tr -d '\r' > .ssh/id_rsa.pub
           chmod 400 .ssh/id_rsa
-          chmod 700 ~/.ssh
-          touch ~/.ssh/known_hosts
-          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
+          chmod 700 .ssh
+          touch .ssh/known_hosts
+          echo "$SSH_KNOWN_HOSTS" > .ssh/known_hosts
+          chmod 644 .ssh/known_hosts
       - name: Login in docker hub
         run: |
           ssh ${{vars.DOCKER_SWARM_MASTER_SSH}}
