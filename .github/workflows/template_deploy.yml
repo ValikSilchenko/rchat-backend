@@ -20,8 +20,7 @@ jobs:
           echo "$SSH_PRIVATE_KEY" | tr -d '\r' > .ssh/id_rsa
           touch .ssh/id_rsa.pub
           echo "$SSH_PUBLIC_KEY" | tr -d '\r' > .ssh/id_rsa.pub
-          chmod 400 ./id_rsa
-          mkdir -p ~/.ssh
+          chmod 400 .ssh/id_rsa
           chmod 700 ~/.ssh
           touch ~/.ssh/known_hosts
           echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
