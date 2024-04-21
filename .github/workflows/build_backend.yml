@@ -13,14 +13,13 @@ on:
         required: false
 
 env:
-  IMAGE_NAME: ${{vars.CI_REGISTRY_HOST}}/rchat-test:${{GITHUB_SHA}}-test
+  IMAGE_NAME: ${{vars.CI_REGISTRY_HOST}}/rchat-test
 
 jobs:
   build_image:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          echo "sha: ${{GITHUB_SHA}}"
           echo "sha: ${{github.GITHUB_SHA}}"
           echo "sha: ${{github.SHA}}"
           echo "sha: ${{github.sha}}"
