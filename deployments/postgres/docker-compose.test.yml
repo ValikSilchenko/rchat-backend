@@ -29,7 +29,10 @@ services:
           cpus: "0.1"
           memory: 200M
     logging:
-      driver: local
+      driver: fluentd
+      options:
+        fluentd-address: rchat-company.ru:24224
+        tag: rchat.postgres
 
 networks:
   postgres_test:

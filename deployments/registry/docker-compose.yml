@@ -28,5 +28,8 @@ services:
         max_attempts: 5
         window: 60s
     logging:
-      driver: local
+      driver: fluentd
+      options:
+        fluentd-address: rchat-company.ru:24224
+        tag: rchat.registry
 
