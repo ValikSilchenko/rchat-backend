@@ -4,7 +4,13 @@ from asyncpg import Pool
 from pydantic import UUID4, UUID5
 
 from rchat.repository.helpers import build_model
-from rchat.schemas.chat import Chat, ChatCreate, ChatTypeEnum, UserChatRole
+from rchat.schemas.chat import (
+    Chat,
+    ChatCreate,
+    ChatParticipant,
+    ChatTypeEnum,
+    UserChatRole,
+)
 
 
 class ChatRepository:
@@ -154,4 +160,29 @@ class ChatRepository:
 
         return Chat(**dict(row))
 
+    async def get_chat_users_with_roles(
+        self, chat_id: UUID4
+    ) -> list[ChatParticipant]:
+        sql = """
+            select
+                cu."user_id" as id,
+                cu."role",
+                cu."added_by_user",
+                u."first_name" || coalesce(u."last_name", '') as name,
+                u."avatar_photo_id",
+                max(s."created_timestamp") as last_online
+                 from "chat_user" cu
+            left join "user" u on cu."user_id" = u."id"
+            left join "session" s on u."id" = s."user_id"
+            where "chat_id" = $1
+            group by
+                cu."user_id",
+                cu."role",
+                cu."added_by_user",
+                name,
+                u."avatar_photo_id"
+        """
+        async with self._db.acquire() as c:
+            rows = await c.fetch(sql, chat_id)
 
+        return [ChatParticipant(**dict(row)) for row in rows]

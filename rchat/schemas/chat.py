@@ -49,4 +49,8 @@ class UserCreatedChat(BaseModel):
 
 class ChatParticipant(BaseModel):
     id: UUID5
+    name: str
     role: UserChatRole
+    avatar_photo_id: UUID4 | None
+    last_online: datetime | None
+    added_by_user: UUID5 | None

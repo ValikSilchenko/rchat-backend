@@ -3,7 +3,7 @@ from enum import StrEnum
 
 from pydantic import UUID4, UUID5, BaseModel
 
-from rchat.schemas.chat import ChatTypeEnum, UserCreatedChat, UserChatRole
+from rchat.schemas.chat import ChatTypeEnum, UserChatRole, UserCreatedChat
 from rchat.schemas.message import MessageTypeEnum
 from rchat.views.message.models import MessageSender
 
@@ -72,7 +72,7 @@ class ChatUser(BaseModel):
     name: str
     avatar_photo_url: str | None
     chat_role: UserChatRole
-    last_online: str
+    last_online: datetime | None
     can_exclude: bool
 
 

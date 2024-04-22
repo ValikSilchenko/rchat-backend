@@ -1,9 +1,15 @@
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import UUID4
+from starlette import status
 
-from rchat.schemas.chat import ChatCreate, ChatTypeEnum, UserCreatedChat, UserChatRole
+from rchat.schemas.chat import (
+    ChatCreate,
+    ChatTypeEnum,
+    UserChatRole,
+    UserCreatedChat,
+)
 from rchat.schemas.message import MessageCreate, MessageTypeEnum
 from rchat.schemas.session import Session
 from rchat.state import app_state
@@ -13,10 +19,12 @@ from rchat.views.chat.models import (
     BaseChatInfo,
     ChatListItem,
     ChatListResponse,
+    ChatUser,
     CreateGroupChatBody,
     CreateGroupChatResponse,
     CreateGroupChatStatusEnum,
-    LastChatMessage, GetChatUsersResponse,
+    GetChatUsersResponse,
+    LastChatMessage,
 )
 from rchat.views.message.helpers import (
     create_and_send_message,
@@ -165,5 +173,45 @@ async def create_group_chat(
 
 
 @router.get(path="/chat/get_users", response_model=GetChatUsersResponse)
-async def get_chat_users(chat_id: UUID4):
-    pass
+async def get_chat_users(
+    chat_id: UUID4, session: Session = Depends(check_access_token)
+):
+    chat_users = await app_state.chat_repo.get_chat_users_with_roles(
+        chat_id=chat_id
+    )
+    if not chat_users:
+        logger.error(
+            "Chat not found. chat_id=%s, session=%s", chat_id, session.id
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="chat_not_found"
+        )
+
+    current_user = list(
+        filter(lambda user: user.id == session.user_id, chat_users)
+    )[0]
+
+    chat_users = [
+        ChatUser(
+            id=user.id,
+            name=user.name,
+            avatar_photo_url=(
+                app_state.media_repo.get_media_url(id_=user.avatar_photo_id)
+                if user.avatar_photo_id
+                else None
+            ),
+            chat_role=user.role,
+            last_online=user.last_online,
+            can_exclude=current_user.id != user.id
+            and (
+                current_user.role == UserChatRole.owner
+                or current_user.id == user.added_by_user
+                and user.role == UserChatRole.member
+                or current_user.role == UserChatRole.admin
+                and user.role == UserChatRole.member
+            ),
+        )
+        for user in chat_users
+    ]
+
+    return GetChatUsersResponse(users=chat_users)
