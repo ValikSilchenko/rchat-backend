@@ -4,7 +4,7 @@ from asyncpg import Pool
 from pydantic import UUID4, UUID5
 
 from rchat.repository.helpers import build_model
-from rchat.schemas.chat import Chat, ChatCreate, ChatTypeEnum
+from rchat.schemas.chat import Chat, ChatCreate, ChatTypeEnum, UserChatRole
 
 
 class ChatRepository:
@@ -31,7 +31,7 @@ class ChatRepository:
         chat_id: UUID4,
         user_id: UUID5,
         added_by_user: UUID5 | None = None,
-        is_chat_owner: bool = False,
+        role: UserChatRole = UserChatRole.member,
         last_available_message: UUID4 | None = None,
     ) -> None:
         """
@@ -42,7 +42,7 @@ class ChatRepository:
                 "chat_id",
                 "user_id",
                 "added_by_user",
-                "is_chat_owner",
+                "role",
                 "last_available_message"
             )
             values ($1, $2, $3, $4, $5)
@@ -53,7 +53,7 @@ class ChatRepository:
                 chat_id,
                 user_id,
                 added_by_user,
-                is_chat_owner,
+                role,
                 last_available_message,
             )
 
@@ -74,7 +74,7 @@ class ChatRepository:
 
     async def get_chat_participant_users(self, chat_id: UUID4) -> list[UUID5]:
         """
-        получает список id пользователей чата.
+        Получает список id пользователей чата.
         """
         sql = """
             select "user_id" from "chat_user" where "chat_id" = $1
@@ -153,3 +153,5 @@ class ChatRepository:
             return
 
         return Chat(**dict(row))
+
+

@@ -1,8 +1,9 @@
 import logging
 
 from fastapi import APIRouter, Depends
+from pydantic import UUID4
 
-from rchat.schemas.chat import ChatCreate, ChatTypeEnum, UserCreatedChat
+from rchat.schemas.chat import ChatCreate, ChatTypeEnum, UserCreatedChat, UserChatRole
 from rchat.schemas.message import MessageCreate, MessageTypeEnum
 from rchat.schemas.session import Session
 from rchat.state import app_state
@@ -15,7 +16,7 @@ from rchat.views.chat.models import (
     CreateGroupChatBody,
     CreateGroupChatResponse,
     CreateGroupChatStatusEnum,
-    LastChatMessage,
+    LastChatMessage, GetChatUsersResponse,
 )
 from rchat.views.message.helpers import (
     create_and_send_message,
@@ -130,7 +131,7 @@ async def create_group_chat(
         )
 
     await app_state.chat_repo.add_chat_participant(
-        chat_id=chat.id, user_id=owner_user.id, is_chat_owner=True
+        chat_id=chat.id, user_id=owner_user.id, role=UserChatRole.owner
     )
 
     message_create_model = MessageCreate(
@@ -161,3 +162,8 @@ async def create_group_chat(
             avatar_photo_url=chat_avatar,
         )
     )
+
+
+@router.get(path="/chat/get_users", response_model=GetChatUsersResponse)
+async def get_chat_users(chat_id: UUID4):
+    pass

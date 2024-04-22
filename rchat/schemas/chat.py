@@ -11,6 +11,12 @@ class ChatTypeEnum(StrEnum):
     channel = "channel"
 
 
+class UserChatRole(StrEnum):
+    admin = "admin"
+    owner = "owner"
+    member = "member"
+
+
 class ChatCreate(BaseModel):
     id: UUID4 = Field(default_factory=lambda: uuid.uuid4())
     type: ChatTypeEnum
@@ -42,9 +48,5 @@ class UserCreatedChat(BaseModel):
 
 
 class ChatParticipant(BaseModel):
-    chat_id: UUID4
-    user_id: UUID5
-    added_by_user: UUID5
-    is_chat_owner: bool
-    last_available_message: UUID4 | None
-    created_timestamp: datetime
+    id: UUID5
+    role: UserChatRole
