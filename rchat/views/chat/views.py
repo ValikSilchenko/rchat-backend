@@ -1,20 +1,34 @@
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import UUID4
+from starlette import status
 
-from rchat.schemas.chat import ChatCreate, ChatTypeEnum, UserCreatedChat
+from rchat.schemas.chat import (
+    ChatCreate,
+    ChatTypeEnum,
+    UserChatRole,
+    UserCreatedChat,
+)
 from rchat.schemas.message import MessageCreate, MessageTypeEnum
 from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
-from rchat.views.chat.helpers import get_chat_name_and_avatar
+from rchat.views.chat.helpers import (
+    get_chat_name_and_avatar,
+    is_group_chat_with_user_exists,
+)
 from rchat.views.chat.models import (
+    AddRemoveUserFromChatBody,
     BaseChatInfo,
     ChatListItem,
     ChatListResponse,
+    ChatUser,
+    ChatUserActionStatusEnum,
     CreateGroupChatBody,
     CreateGroupChatResponse,
     CreateGroupChatStatusEnum,
+    GetChatUsersResponse,
     LastChatMessage,
 )
 from rchat.views.message.helpers import (
@@ -130,7 +144,7 @@ async def create_group_chat(
         )
 
     await app_state.chat_repo.add_chat_participant(
-        chat_id=chat.id, user_id=owner_user.id, is_chat_owner=True
+        chat_id=chat.id, user_id=owner_user.id, role=UserChatRole.owner
     )
 
     message_create_model = MessageCreate(
@@ -160,4 +174,80 @@ async def create_group_chat(
             allow_messages_to=chat.allow_messages_to,
             avatar_photo_url=chat_avatar,
         )
+    )
+
+
+@router.get(path="/chat/get_users", response_model=GetChatUsersResponse)
+async def get_chat_users(
+    chat_id: UUID4, session: Session = Depends(check_access_token)
+):
+    await is_group_chat_with_user_exists(chat_id=chat_id, session=session)
+
+    chat_users = await app_state.chat_repo.get_chat_users_with_roles(
+        chat_id=chat_id
+    )
+    current_user = list(
+        filter(lambda user: user.id == session.user_id, chat_users)
+    )[0]
+
+    chat_users = [
+        ChatUser(
+            id=user.id,
+            name=user.name,
+            avatar_photo_url=(
+                app_state.media_repo.get_media_url(id_=user.avatar_photo_id)
+                if user.avatar_photo_id
+                else None
+            ),
+            chat_role=user.role,
+            last_online=user.last_online,
+            can_exclude=current_user.id != user.id
+            and (
+                current_user.role == UserChatRole.owner
+                or current_user.id == user.added_by_user
+                and user.role == UserChatRole.member
+                or current_user.role == UserChatRole.admin
+                and user.role == UserChatRole.member
+            ),
+        )
+        for user in chat_users
+    ]
+
+    return GetChatUsersResponse(users=chat_users)
+
+
+@router.put(path="/chat/add_user")
+async def add_user_to_chat(
+    body: AddRemoveUserFromChatBody,
+    session: Session = Depends(check_access_token),
+):
+    await is_group_chat_with_user_exists(chat_id=body.chat_id, session=session)
+
+    user_to_add = await app_state.user_repo.get_by_id(id_=body.user_id)
+    if not user_to_add:
+        logger.error(
+            "User not found. user_id=%s, session=%s",
+            body.user_id,
+            session.id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ChatUserActionStatusEnum.user_not_found,
+        )
+
+    is_user_in_chat = await app_state.chat_repo.is_user_in_chat(
+        chat_id=body.chat_id,
+        user_id=body.user_id,
+        chat_type=ChatTypeEnum.group,
+    )
+    if is_user_in_chat:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ChatUserActionStatusEnum.user_already_in_chat,
+        )
+
+    await app_state.chat_repo.add_chat_participant(
+        chat_id=body.chat_id,
+        user_id=user_to_add.id,
+        added_by_user=session.user_id,
     )

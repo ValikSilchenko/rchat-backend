@@ -2,11 +2,11 @@ name: Build backend test
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - lint
-    types:
-      - completed
+#  workflow_run:
+#    workflows:
+#      - lint
+#    types:
+#      - completed
 
 env:
   IMAGE_NAME: ${{vars.CI_REGISTRY_HOST}}/rchat-test:${{github.SHA}}-test
