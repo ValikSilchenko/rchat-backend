@@ -31,7 +31,7 @@ services:
     logging:
       driver: fluentd
       options:
-        fluentd-address: rchat-company.ru:24224
+        fluentd-address: localhost:24224
         tag: rchat.postgres
 
 networks:
