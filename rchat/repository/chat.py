@@ -168,7 +168,7 @@ class ChatRepository:
                 cu."user_id" as id,
                 cu."role",
                 cu."added_by_user",
-                u."first_name" || coalesce(u."last_name", '') as name,
+                u."first_name" || coalesce(' ' || u."last_name", '') as name,
                 u."avatar_photo_id",
                 max(s."created_timestamp") as last_online
                  from "chat_user" cu
