@@ -2,11 +2,11 @@ name: Deploy backend test
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - Build backend test
-    types:
-      - completed
+#  workflow_run:
+#    workflows:
+#      - Build backend test
+#    types:
+#      - completed
 
 jobs:
   setup_ssh:
