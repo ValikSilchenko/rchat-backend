@@ -14,7 +14,7 @@ from rchat.schemas.message import MessageCreate, MessageTypeEnum
 from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
-from rchat.views.chat.helpers import get_chat_name_and_avatar
+from rchat.views.chat.helpers import get_chat_name_and_avatar, is_group_chat_with_user_exists
 from rchat.views.chat.models import (
     BaseChatInfo,
     ChatListItem,
@@ -24,7 +24,7 @@ from rchat.views.chat.models import (
     CreateGroupChatResponse,
     CreateGroupChatStatusEnum,
     GetChatUsersResponse,
-    LastChatMessage,
+    LastChatMessage, AddRemoveUserFromChatBody, ChatUserActionStatusEnum,
 )
 from rchat.views.message.helpers import (
     create_and_send_message,
@@ -176,17 +176,11 @@ async def create_group_chat(
 async def get_chat_users(
     chat_id: UUID4, session: Session = Depends(check_access_token)
 ):
+    await is_group_chat_with_user_exists(chat_id=chat_id, session=session)
+
     chat_users = await app_state.chat_repo.get_chat_users_with_roles(
         chat_id=chat_id
     )
-    if not chat_users:
-        logger.error(
-            "Chat not found. chat_id=%s, session=%s", chat_id, session.id
-        )
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="chat_not_found"
-        )
-
     current_user = list(
         filter(lambda user: user.id == session.user_id, chat_users)
     )[0]
@@ -215,3 +209,29 @@ async def get_chat_users(
     ]
 
     return GetChatUsersResponse(users=chat_users)
+
+
+@router.put(path="/chat/add_user")
+async def add_user_to_chat(
+        body: AddRemoveUserFromChatBody,
+        session: Session = Depends(check_access_token),
+):
+    await is_group_chat_with_user_exists(chat_id=body.chat_id, session=session)
+
+    user_to_add = await app_state.user_repo.get_by_id(id_=body.user_id)
+    if not user_to_add:
+        logger.error(
+            "User not found. user_id=%s, session=%s",
+            body.user_id,
+            session.id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ChatUserActionStatusEnum.user_not_found,
+        )
+
+    await app_state.chat_repo.add_chat_participant(
+        chat_id=body.chat_id,
+        user_id=user_to_add.id,
+        added_by_user=session.user_id,
+    )

@@ -78,3 +78,13 @@ class ChatUser(BaseModel):
 
 class GetChatUsersResponse(BaseModel):
     users: list[ChatUser]
+
+
+class ChatUserActionStatusEnum(StrEnum):
+    user_not_found = "user_not_found"
+    chat_not_found = "chat_not_found"
+
+
+class AddRemoveUserFromChatBody(BaseModel):
+    chat_id: UUID4
+    user_id: UUID5
