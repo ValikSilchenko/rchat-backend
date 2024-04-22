@@ -187,30 +187,15 @@ class ChatRepository:
 
         return [ChatParticipant(**dict(row)) for row in rows]
 
-    async def get_chat_by_id_and_user(
-        self, chat_id: UUID4, user_id: UUID5
-    ) -> Optional[Chat]:
-        sql = """
-            select * from "chat"
-            where "id" = $1 and exists(
-                select 1 from "chat_user"
-                where "chat_id" = $1 and "user_id" = $2
-            )
-        """
-        async with self._db.acquire() as c:
-            row = await c.fetchrow(sql, chat_id, user_id)
-
-        if not row:
-            return
-
-        return Chat(**dict(row))
-
-    async def is_user_in_chat(self, chat_id: UUID4, user_id: UUID5) -> bool:
+    async def is_user_in_chat(
+        self, chat_id: UUID4, user_id: UUID5, chat_type: ChatTypeEnum
+    ) -> bool:
         sql = """
             select true from "chat_user"
-            where "chat_id" = $1 and "user_id" = $2
+            left join "chat" on "chat"."id" = "chat_user"."chat_id"
+            where "chat_id" = $1 and "user_id" = $2 and "type" = $3
         """
         async with self._db.acquire() as c:
-            row = await c.fetchrow(sql, chat_id, user_id)
+            row = await c.fetchrow(sql, chat_id, user_id, chat_type)
 
         return bool(row)

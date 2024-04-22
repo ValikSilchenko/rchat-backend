@@ -236,7 +236,9 @@ async def add_user_to_chat(
         )
 
     is_user_in_chat = await app_state.chat_repo.is_user_in_chat(
-        chat_id=body.chat_id, user_id=body.user_id
+        chat_id=body.chat_id,
+        user_id=body.user_id,
+        chat_type=ChatTypeEnum.group,
     )
     if is_user_in_chat:
         raise HTTPException(

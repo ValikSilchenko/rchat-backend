@@ -53,11 +53,10 @@ async def get_chat_name_and_avatar(
 
 
 async def is_group_chat_with_user_exists(chat_id: str, session: Session):
-    chat = await app_state.chat_repo.get_chat_by_id_and_user(
-        chat_id=chat_id,
-        user_id=session.user_id,
+    is_in_chat = await app_state.chat_repo.is_user_in_chat(
+        chat_id=chat_id, user_id=session.user_id, chat_type=ChatTypeEnum.group
     )
-    if not chat or chat.type != ChatTypeEnum.group:
+    if is_in_chat:
         logger.error(
             "Group chat with user not found. chat_id=%s, session=%s",
             chat_id,
