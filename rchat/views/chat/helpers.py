@@ -59,7 +59,9 @@ async def is_group_chat_with_user_exists(chat_id: str, session: Session):
     )
     if not chat or chat.type != ChatTypeEnum.group:
         logger.error(
-            "Chat not found. chat_id=%s, session=%s", chat_id, session.id
+            "Group chat with user not found. chat_id=%s, session=%s",
+            chat_id,
+            session.id,
         )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

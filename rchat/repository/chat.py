@@ -188,7 +188,7 @@ class ChatRepository:
         return [ChatParticipant(**dict(row)) for row in rows]
 
     async def get_chat_by_id_and_user(
-            self, chat_id: UUID4, user_id: UUID5
+        self, chat_id: UUID4, user_id: UUID5
     ) -> Optional[Chat]:
         sql = """
             select * from "chat"
@@ -204,3 +204,13 @@ class ChatRepository:
             return
 
         return Chat(**dict(row))
+
+    async def is_user_in_chat(self, chat_id: UUID4, user_id: UUID5) -> bool:
+        sql = """
+            select true from "chat_user"
+            where "chat_id" = $1 and "user_id" = $2
+        """
+        async with self._db.acquire() as c:
+            row = await c.fetchrow(sql, chat_id, user_id)
+
+        return bool(row)

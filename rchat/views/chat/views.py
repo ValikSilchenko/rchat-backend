@@ -14,17 +14,22 @@ from rchat.schemas.message import MessageCreate, MessageTypeEnum
 from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
-from rchat.views.chat.helpers import get_chat_name_and_avatar, is_group_chat_with_user_exists
+from rchat.views.chat.helpers import (
+    get_chat_name_and_avatar,
+    is_group_chat_with_user_exists,
+)
 from rchat.views.chat.models import (
+    AddRemoveUserFromChatBody,
     BaseChatInfo,
     ChatListItem,
     ChatListResponse,
     ChatUser,
+    ChatUserActionStatusEnum,
     CreateGroupChatBody,
     CreateGroupChatResponse,
     CreateGroupChatStatusEnum,
     GetChatUsersResponse,
-    LastChatMessage, AddRemoveUserFromChatBody, ChatUserActionStatusEnum,
+    LastChatMessage,
 )
 from rchat.views.message.helpers import (
     create_and_send_message,
@@ -213,8 +218,8 @@ async def get_chat_users(
 
 @router.put(path="/chat/add_user")
 async def add_user_to_chat(
-        body: AddRemoveUserFromChatBody,
-        session: Session = Depends(check_access_token),
+    body: AddRemoveUserFromChatBody,
+    session: Session = Depends(check_access_token),
 ):
     await is_group_chat_with_user_exists(chat_id=body.chat_id, session=session)
 
@@ -228,6 +233,15 @@ async def add_user_to_chat(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ChatUserActionStatusEnum.user_not_found,
+        )
+
+    is_user_in_chat = await app_state.chat_repo.is_user_in_chat(
+        chat_id=body.chat_id, user_id=body.user_id
+    )
+    if is_user_in_chat:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ChatUserActionStatusEnum.user_already_in_chat,
         )
 
     await app_state.chat_repo.add_chat_participant(

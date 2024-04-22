@@ -82,6 +82,7 @@ class GetChatUsersResponse(BaseModel):
 
 class ChatUserActionStatusEnum(StrEnum):
     user_not_found = "user_not_found"
+    user_already_in_chat = "user_already_in_chat"
     chat_not_found = "chat_not_found"
 
 
