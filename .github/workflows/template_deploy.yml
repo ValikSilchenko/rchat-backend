@@ -25,6 +25,8 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           chmod 666 ~/.ssh/id_rsa.pub
           chmod 600 ~/.ssh/known_hosts
+          eval $(ssh-agent -s)
+          ssh-add "~/.ssh/id_rsa"
       - name: Login in docker hub
         run: |
           docker context create swarm-cluster --docker "host=ssh://${{vars.DOCKER_SWARM_MASTER_SSH}}"
