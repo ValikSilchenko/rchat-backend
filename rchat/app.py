@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 import rchat.clients.socketio_client as sio_client
 from rchat import migration_runner
+from rchat.conf import RELOAD_ENABLED
 from rchat.exceptions import register_exception_handlers
 from rchat.helpers import create_storage_folders
 from rchat.log import setup_logging
@@ -44,7 +45,7 @@ app.mount(path="/", app=sio_client.asio_app)
 if __name__ == "__main__":
     uvicorn.run(
         app="rchat.app:app",
-        reload=True,
+        reload=RELOAD_ENABLED,
         port=8080,
         host="0.0.0.0",
         access_log=False,
