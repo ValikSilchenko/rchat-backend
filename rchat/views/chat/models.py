@@ -3,7 +3,7 @@ from enum import StrEnum
 
 from pydantic import UUID4, UUID5, BaseModel
 
-from rchat.schemas.chat import ChatTypeEnum, UserCreatedChat
+from rchat.schemas.chat import ChatTypeEnum, UserChatRole, UserCreatedChat
 from rchat.schemas.message import MessageTypeEnum
 from rchat.views.message.models import MessageSender
 
@@ -65,3 +65,27 @@ class CreateGroupChatResponse(BaseModel):
     status: CreateGroupChatStatusEnum = CreateGroupChatStatusEnum.ok
     users_not_found: list[UUID5] = []
     created_chat_info: BaseChatInfo | None = None
+
+
+class ChatUser(BaseModel):
+    id: UUID5
+    name: str
+    avatar_photo_url: str | None
+    chat_role: UserChatRole
+    last_online: datetime | None
+    can_exclude: bool
+
+
+class GetChatUsersResponse(BaseModel):
+    users: list[ChatUser]
+
+
+class ChatUserActionStatusEnum(StrEnum):
+    user_not_found = "user_not_found"
+    user_already_in_chat = "user_already_in_chat"
+    chat_not_found = "chat_not_found"
+
+
+class AddRemoveUserFromChatBody(BaseModel):
+    chat_id: UUID4
+    user_id: UUID5

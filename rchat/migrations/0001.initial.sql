@@ -87,7 +87,7 @@ create table "chat_user" (
     chat_id uuid references "chat" ("id"),
     user_id uuid references "user" ("id"),
     added_by_user uuid references "user" ("id"),
-    is_chat_owner bool not null default false,
+    role varchar(16) not null,
     last_available_message uuid references "message" ("id"),
     created_timestamp timestamp not null default now(),
     primary key ("chat_id", "user_id")
