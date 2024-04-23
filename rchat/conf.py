@@ -16,3 +16,5 @@ REFRESH_LIFETIME_DAYS = int(os.environ.get("RCHAT_REFRESH_LIFETIME_DAYS"))
 
 STORAGE_DIR = os.environ.get("RCHAT_STORAGE_DIR")
 STORAGE_FOLDERS = ["files", "temp"]
+
+RELOAD_ENABLED = bool(os.environ.get("RCHAT_RELOAD_ENABLED"))
