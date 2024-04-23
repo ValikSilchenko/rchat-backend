@@ -2,8 +2,7 @@ version: "3"
 
 services:
   backend:
-    container_name: backend_test
-    image: ${IMAGE_NAME}
+    image: rchat_test
     env_file: test.env
     volumes:
       - "../../storage:/app/storage"
@@ -20,7 +19,10 @@ services:
           cpus: "0.2"
           memory: 100M
     logging:
-      driver: local
+      driver: fluentd
+      options:
+        fluentd-address: rchat-company.ru:24224
+        tag: rchat.backend
 
 networks:
   postgres_test:

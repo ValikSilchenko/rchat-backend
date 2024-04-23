@@ -4,23 +4,27 @@ services:
   registry:
     image: registry:2.7.0
     ports:
-      - "443:443"
+      - "5000:5000"
     environment:
       REGISTRY_AUTH: htpasswd
-      REGISTRY_AUTH_HTPASSWD_REALM: Registry-Realm
-      REGISTRY_AUTH_HTPASSWD_PATH: ${HTPASSWD_PATH}
-      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: ${ROOT_DIR}
-      REGISTRY_HTTP_TLS_CERTIFICATE: ${TLS_CERT}
-      REGISTRY_HTTP_TLS_KEY: ${TLS_KEY}
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+      REGISTRY_HTTP_TLS_CERTIFICATE: /certs/public.pem
+      REGISTRY_HTTP_TLS_KEY: /certs/private.key
     volumes:
-      - "/docker_repo:/var/lib/registry"
-      - "./auth:/auth"
-      - "/certs:/etc/docker/certs.d/rchat-company.ru:5000/cert"
+      - "/docker_repo/data:/var/lib/registry"
+      - "/docker_repo/auth:/auth"
+      - "/docker_repo/ssl:/certs"
+    networks:
+      - registry
     deploy:
       replicas: 1
+      placement:
+        constraints:
+          - "node.role==manager"
       resources:
         limits:
-          cpus: "0.2"
+          cpus: "0.1"
           memory: 50M
       restart_policy:
         condition: on-failure
@@ -28,5 +32,12 @@ services:
         max_attempts: 5
         window: 60s
     logging:
-      driver: local
+      driver: fluentd
+      options:
+        fluentd-address: rchat-company.ru:24224
+        tag: rchat.registry
 
+networks:
+  registry:
+    driver: overlay
+    external: true
