@@ -2,7 +2,7 @@ version: "3"
 
 services:
   backend:
-    image: ${IMAGE_NAME}
+    image: rchat_test
     env_file: test.env
     volumes:
       - "../../storage:/app/storage"
