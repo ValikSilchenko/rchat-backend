@@ -17,6 +17,7 @@ jobs:
           mkdir ~/.ssh
           touch ~/.ssh/id_rsa
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          openssl pkey -check -in ~/.ssh/id_rsa -noout
           touch ~/.ssh/id_rsa.pub
           echo "$SSH_PUBLIC_KEY" > ~/.ssh/id_rsa.pub
           chown $USER ~/.ssh/id_rsa
