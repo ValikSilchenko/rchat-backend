@@ -9,6 +9,8 @@ services:
     networks:
       - postgres_test
       - nginx
+    ports:
+      - "8080:8080"
     deploy:
       restart_policy:
         condition: on-failure
