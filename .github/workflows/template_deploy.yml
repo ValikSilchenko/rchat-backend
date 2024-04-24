@@ -14,13 +14,13 @@ jobs:
     steps:
       - name: Set up ssh
         run: |
-          chown $USER /root
-          chmod 755 /root
           mkdir ~/.ssh
           touch ~/.ssh/id_rsa
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           touch ~/.ssh/id_rsa.pub
           echo "$SSH_PUBLIC_KEY" > ~/.ssh/id_rsa.pub
+          chown $USER ~/.ssh/id_rsa
+          chown $USER ~/.ssh/id_rsa.pub
           touch ~/.ssh/known_hosts
           echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chown -R $USER
