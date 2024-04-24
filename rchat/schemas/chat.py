@@ -15,6 +15,7 @@ class UserChatRole(StrEnum):
     admin = "admin"
     owner = "owner"
     member = "member"
+    observer = "observer"
 
 
 class ChatCreate(BaseModel):
@@ -47,10 +48,15 @@ class UserCreatedChat(BaseModel):
     first_name: str
 
 
-class ChatParticipant(BaseModel):
+class ChatParticipantWithInfo(BaseModel):
     id: UUID5
     name: str
     role: UserChatRole
     avatar_photo_id: UUID4 | None
     last_online: datetime | None
     added_by_user: UUID5 | None
+
+
+class ChatParticipant(BaseModel):
+    user_id: UUID5
+    role: UserChatRole

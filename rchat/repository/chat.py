@@ -7,9 +7,9 @@ from rchat.repository.helpers import build_model
 from rchat.schemas.chat import (
     Chat,
     ChatCreate,
-    ChatParticipant,
+    ChatParticipantWithInfo,
     ChatTypeEnum,
-    UserChatRole,
+    UserChatRole, ChatParticipant,
 )
 
 
@@ -52,6 +52,8 @@ class ChatRepository:
                 "last_available_message"
             )
             values ($1, $2, $3, $4, $5)
+            on conflict ("chat_id", "user_id")
+            do update set "role" = $4
         """
         async with self._db.acquire() as c:
             await c.execute(
@@ -162,7 +164,7 @@ class ChatRepository:
 
     async def get_chat_users_with_roles(
         self, chat_id: UUID4
-    ) -> list[ChatParticipant]:
+    ) -> list[ChatParticipantWithInfo]:
         sql = """
             select
                 cu."user_id" as id,
@@ -185,17 +187,20 @@ class ChatRepository:
         async with self._db.acquire() as c:
             rows = await c.fetch(sql, chat_id)
 
-        return [ChatParticipant(**dict(row)) for row in rows]
+        return [ChatParticipantWithInfo(**dict(row)) for row in rows]
 
-    async def is_user_in_chat(
+    async def get_user_in_chat(
         self, chat_id: UUID4, user_id: UUID5, chat_type: ChatTypeEnum
-    ) -> bool:
+    ) -> Optional[ChatParticipant]:
         sql = """
-            select true from "chat_user"
+            select * from "chat_user"
             left join "chat" on "chat"."id" = "chat_user"."chat_id"
             where "chat_id" = $1 and "user_id" = $2 and "type" = $3
         """
         async with self._db.acquire() as c:
             row = await c.fetchrow(sql, chat_id, user_id, chat_type)
 
-        return bool(row)
+        if not row:
+            return
+
+        return ChatParticipant(**dict(row))

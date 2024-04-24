@@ -80,12 +80,13 @@ class GetChatUsersResponse(BaseModel):
     users: list[ChatUser]
 
 
-class ChatUserActionStatusEnum(StrEnum):
+class AddUserInChatStatusEnum(StrEnum):
     user_not_found = "user_not_found"
     user_already_in_chat = "user_already_in_chat"
     chat_not_found = "chat_not_found"
 
 
-class AddRemoveUserFromChatBody(BaseModel):
+class AddUserInChatBody(BaseModel):
     chat_id: UUID4
     user_id: UUID5
+    role: UserChatRole
