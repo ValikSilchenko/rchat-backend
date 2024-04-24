@@ -19,7 +19,7 @@ from rchat.views.chat.helpers import (
     is_group_chat_with_user_exists,
 )
 from rchat.views.chat.models import (
-    AddRemoveUserFromChatBody,
+    AddUserInChatBody,
     BaseChatInfo,
     ChatListItem,
     ChatListResponse,
@@ -218,10 +218,12 @@ async def get_chat_users(
 
 @router.put(path="/chat/add_user")
 async def add_user_to_chat(
-    body: AddRemoveUserFromChatBody,
+    body: AddUserInChatBody,
     session: Session = Depends(check_access_token),
 ):
-    await is_group_chat_with_user_exists(chat_id=body.chat_id, session=session)
+    current_user = await is_group_chat_with_user_exists(
+        chat_id=body.chat_id, session=session
+    )
 
     user_to_add = await app_state.user_repo.get_by_id(id_=body.user_id)
     if not user_to_add:
@@ -235,19 +237,65 @@ async def add_user_to_chat(
             detail=ChatUserActionStatusEnum.user_not_found,
         )
 
-    is_user_in_chat = await app_state.chat_repo.is_user_in_chat(
+    user_in_chat = await app_state.chat_repo.get_user_in_chat(
         chat_id=body.chat_id,
         user_id=body.user_id,
         chat_type=ChatTypeEnum.group,
     )
-    if is_user_in_chat:
+    if user_in_chat and user_in_chat.role == body.role:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ChatUserActionStatusEnum.user_already_in_chat,
+        )
+
+    is_forbidden = False
+    if not user_in_chat and body.role not in {
+        UserChatRole.member,
+        UserChatRole.observer,
+    }:
+        is_forbidden = True
+
+    match current_user.role:
+        case UserChatRole.observer:
+            is_forbidden = True
+        case UserChatRole.member:
+            if user_in_chat:
+                is_forbidden = True
+        case UserChatRole.admin:
+            if user_in_chat and user_in_chat.role in {
+                UserChatRole.admin,
+                UserChatRole.owner,
+            }:
+                is_forbidden = True
+            elif user_in_chat and body.role not in {
+                UserChatRole.member,
+                UserChatRole.observer,
+            }:
+                is_forbidden = True
+        case UserChatRole.owner:
+            if user_in_chat and body.role == UserChatRole.owner:
+                await app_state.chat_repo.add_chat_participant(
+                    chat_id=body.chat_id,
+                    user_id=current_user.user_id,
+                    role=UserChatRole.admin,
+                )
+
+    if is_forbidden:
+        logger.error(
+            "Permission denied to add user with such role."
+            " session=%s, user_to_add=%s, user_to_add_role=%s",
+            session.id,
+            body.user_id,
+            body.role,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ChatUserActionStatusEnum.permission_denied,
         )
 
     await app_state.chat_repo.add_chat_participant(
         chat_id=body.chat_id,
         user_id=user_to_add.id,
         added_by_user=session.user_id,
+        role=body.role,
     )
