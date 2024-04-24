@@ -20,8 +20,8 @@ jobs:
           openssl pkey -check -in ~/.ssh/id_rsa -noout
           touch ~/.ssh/id_rsa.pub
           echo "$SSH_PUBLIC_KEY" > ~/.ssh/id_rsa.pub
-          chown $USER ~/.ssh/id_rsa
-          chown $USER ~/.ssh/id_rsa.pub
+          chown $USER:$USER ~/.ssh/id_rsa
+          chown $USER:$USER ~/.ssh/id_rsa.pub
           touch ~/.ssh/known_hosts
           echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 700 ~/.ssh
