@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from pydantic import UUID5
 from starlette import status
 
-from rchat.schemas.chat import Chat, ChatTypeEnum
+from rchat.schemas.chat import Chat, ChatParticipant, ChatTypeEnum
 from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.chat.models import ChatUserActionStatusEnum
@@ -52,11 +52,13 @@ async def get_chat_name_and_avatar(
     return chat.name, chat_avatar
 
 
-async def is_group_chat_with_user_exists(chat_id: str, session: Session):
-    is_in_chat = await app_state.chat_repo.get_user_in_chat(
+async def is_group_chat_with_user_exists(
+    chat_id: str, session: Session
+) -> ChatParticipant:
+    user_in_chat = await app_state.chat_repo.get_user_in_chat(
         chat_id=chat_id, user_id=session.user_id, chat_type=ChatTypeEnum.group
     )
-    if not is_in_chat:
+    if not user_in_chat:
         logger.error(
             "Group chat with user not found. chat_id=%s, session=%s",
             chat_id,
@@ -66,3 +68,4 @@ async def is_group_chat_with_user_exists(chat_id: str, session: Session):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ChatUserActionStatusEnum.chat_not_found,
         )
+    return user_in_chat

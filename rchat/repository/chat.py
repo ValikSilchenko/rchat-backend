@@ -7,9 +7,10 @@ from rchat.repository.helpers import build_model
 from rchat.schemas.chat import (
     Chat,
     ChatCreate,
+    ChatParticipant,
     ChatParticipantWithInfo,
     ChatTypeEnum,
-    UserChatRole, ChatParticipant,
+    UserChatRole,
 )
 
 
