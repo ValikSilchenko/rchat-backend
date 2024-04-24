@@ -14,6 +14,7 @@ jobs:
     steps:
       - name: Set up ssh
         run: |
+          chmod 755 ~
           mkdir ~/.ssh
           touch ~/.ssh/id_rsa
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
@@ -21,12 +22,13 @@ jobs:
           echo "$SSH_PUBLIC_KEY" > ~/.ssh/id_rsa.pub
           touch ~/.ssh/known_hosts
           echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chown -R $USER
           chmod 700 ~/.ssh
-          chmod 644 ~/.ssh/id_rsa
-          chmod 666 ~/.ssh/id_rsa.pub
+          chmod 600 ~/.ssh/id_rsa
+          chmod 644 ~/.ssh/id_rsa.pub
           chmod 600 ~/.ssh/known_hosts
           eval $(ssh-agent -s)
-          ssh-add "~/.ssh/id_rsa"
+          ssh-add ~/.ssh/id_rsa
       - name: Login in docker hub
         run: |
           docker context create swarm-cluster --docker "host=ssh://${{vars.DOCKER_SWARM_MASTER_SSH}}"
