@@ -1,13 +1,14 @@
 version: "3"
 
 services:
-  backend:
+  rchat_test:
     image: ${IMAGE_NAME}
     env_file: test.env
     volumes:
       - "../../storage:/app/storage"
     networks:
       - postgres_test
+      - nginx
     deploy:
       restart_policy:
         condition: on-failure
@@ -26,6 +27,9 @@ services:
 
 networks:
   postgres_test:
+    driver: overlay
+    external: true
+  nginx:
     driver: overlay
     external: true
 
