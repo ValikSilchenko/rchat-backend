@@ -1,4 +1,4 @@
-FROM nginxproxy/nginx-proxy
+FROM nginx
 
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY sites /etc/nginx/sites
