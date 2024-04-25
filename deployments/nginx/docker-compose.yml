@@ -36,3 +36,5 @@ networks:
   nginx:
     driver: overlay
     external: true
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
