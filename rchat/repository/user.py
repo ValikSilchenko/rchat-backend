@@ -120,7 +120,7 @@ class UserRepository:
          для каждого пользователя возвращается его id, public_id и аватар
         """
         sql = f"""
-            select 
+            select
                 "id",
                 "public_id",
                 "avatar_photo_id",
