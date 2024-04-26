@@ -67,6 +67,10 @@ class CreateGroupChatResponse(BaseModel):
 
 
 class ChatUser(BaseModel):
+    """
+    Модель информации о участнике чата.
+    """
+
     id: UUID5
     name: str
     avatar_photo_url: str | None
@@ -76,10 +80,18 @@ class ChatUser(BaseModel):
 
 
 class GetChatUsersResponse(BaseModel):
+    """
+    Модель участников чата.
+    """
+
     users: list[ChatUser]
 
 
 class ChatUserActionStatusEnum(StrEnum):
+    """
+    Статусы для действий добавления/удаления пользователей из чата.
+    """
+
     user_not_found = "user_not_found"
     user_already_in_chat = "user_already_in_chat"
     user_not_in_chat = "user_not_in_chat"

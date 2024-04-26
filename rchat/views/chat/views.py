@@ -167,6 +167,9 @@ async def create_group_chat(
 async def get_chat_users(
     chat_id: UUID4, session: Session = Depends(check_access_token)
 ):
+    """
+    Получение участников группового чата.
+    """
     _, current_user = await get_group_chat_with_user(
         chat_id=chat_id, session=session
     )
@@ -206,6 +209,10 @@ async def add_user_to_chat(
     body: AddUserInChatBody,
     session: Session = Depends(check_access_token),
 ):
+    """
+    Добавляет пользователя или изменяет роль добавленного пользователя.
+    Пользователь может быть добавлен только с ролями member и observer.
+    """
     chat, current_user = await get_group_chat_with_user(
         chat_id=body.chat_id, session=session
     )
@@ -286,6 +293,9 @@ async def remove_user_from_chat(
     body: RemoveUserFromChatBody,
     session: Session = Depends(check_access_token),
 ):
+    """
+    Исключает пользователя из чата.
+    """
     chat, current_user = await get_group_chat_with_user(
         chat_id=body.chat_id, session=session
     )

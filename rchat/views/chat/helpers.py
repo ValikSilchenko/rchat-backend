@@ -62,6 +62,7 @@ async def get_group_chat_with_user(
     chat_id: str, session: Session
 ) -> tuple[Chat, ChatParticipant]:
     """
+    Получает чат и пользователя в этом чате.
     :raises HTTPException: Если чат или пользователь в этом чате не найден.
     """
     chat = await app_state.chat_repo.get_by_id(id_=chat_id)
@@ -96,6 +97,10 @@ async def check_permissions_to_add(
     user_in_chat: Optional[ChatParticipant],
     new_user_role: UserChatRole,
 ) -> bool:
+    """
+    Проверяет, что пользователь
+    может добавить другого пользователя с переданной ролью.
+    """
     is_forbidden = False
     if not user_in_chat and new_user_role not in {
         UserChatRole.member,
