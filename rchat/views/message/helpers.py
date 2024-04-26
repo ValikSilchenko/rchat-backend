@@ -103,7 +103,6 @@ async def get_message_sender(message: Message) -> MessageSender:
 async def create_and_send_message(
     message_create: MessageCreate,
     chat: Chat,
-    group_created_by: Optional[UserCreatedChat] = None,
 ):
     """
     Создаёт сообщение из переданной модели
@@ -121,7 +120,6 @@ async def create_and_send_message(
         type=chat.type,
         description=chat.description,
         created_at=chat.created_timestamp,
-        created_by=group_created_by,
         is_work_chat=chat.is_work_chat,
         allow_messages_from=chat.allow_messages_from,
         allow_messages_to=chat.allow_messages_to,

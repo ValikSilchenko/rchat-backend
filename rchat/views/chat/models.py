@@ -39,7 +39,6 @@ class ChatListItem(BaseChatInfo):
     """
 
     type: ChatTypeEnum
-    created_by: UserCreatedChat | None
     last_message: LastChatMessage | None
 
 
@@ -83,6 +82,7 @@ class GetChatUsersResponse(BaseModel):
 class ChatUserActionStatusEnum(StrEnum):
     user_not_found = "user_not_found"
     user_already_in_chat = "user_already_in_chat"
+    user_not_in_chat = "user_not_in_chat"
     chat_not_found = "chat_not_found"
     permission_denied = "permission_denied"
 
@@ -91,3 +91,8 @@ class AddUserInChatBody(BaseModel):
     chat_id: UUID4
     user_id: UUID5
     role: UserChatRole
+
+
+class RemoveUserFromChatBody(BaseModel):
+    chat_id: UUID4
+    user_id: UUID5
