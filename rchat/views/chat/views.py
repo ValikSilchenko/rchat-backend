@@ -275,17 +275,18 @@ async def add_user_to_chat(
         added_by_user=session.user_id,
         role=body.role,
     )
-    message_create_model = MessageCreate(
-        type=MessageTypeEnum.user_joined,
-        chat_id=chat.id,
-        sender_chat_id=chat.id,
-        user_initiated_action=current_user.user_id,
-        user_involved=user_to_add.id,
-    )
-    await create_and_send_message(
-        message_create=message_create_model,
-        chat=chat,
-    )
+    if not user_in_chat:
+        message_create_model = MessageCreate(
+            type=MessageTypeEnum.user_joined,
+            chat_id=chat.id,
+            sender_chat_id=chat.id,
+            user_initiated_action=current_user.user_id,
+            user_involved=user_to_add.id,
+        )
+        await create_and_send_message(
+            message_create=message_create_model,
+            chat=chat,
+        )
 
 
 @router.delete(path="/chat/remove_user")
