@@ -108,6 +108,7 @@ class NewMessageEventStatusEnum(StrEnum):
 
 class ReadMessageBody(BaseModel):
     message_id: UUID4
+    chat_id: UUID4
 
 
 class ReadMessageStatusEnum(StrEnum):
@@ -118,5 +119,6 @@ class ReadMessageStatusEnum(StrEnum):
 
 
 class ReadMessageResponse(BaseModel):
+    chat_id: UUID4
     message_id: UUID4
     read_by_user: UUID5

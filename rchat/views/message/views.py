@@ -165,7 +165,7 @@ async def handle_read_message(sid, read_message_body: ReadMessageBody):
     message = await app_state.message_repo.get_by_id(
         id_=read_message_body.message_id
     )
-    if not message:
+    if not message or message.chat_id != read_message_body.chat_id:
         logger.error(
             "Message not found. message_id=%s, user_id=%s",
             read_message_body.message_id,
@@ -215,7 +215,7 @@ async def handle_read_message(sid, read_message_body: ReadMessageBody):
 
     is_marked = await app_state.message_repo.mark_message_as_read(
         message_id=read_message_body.message_id,
-        user_id=user_id,
+        read_by_user=user_id,
     )
     if not is_marked:
         logger.error(
@@ -233,7 +233,7 @@ async def handle_read_message(sid, read_message_body: ReadMessageBody):
         return
 
     read_message_response = ReadMessageResponse(
-        message_id=message.id, read_by_user=user_id
+        chat_id=message.chat_id, message_id=message.id, read_by_user=user_id
     )
     for user in chat_participants:
         if user in sio.users:
