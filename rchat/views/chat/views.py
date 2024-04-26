@@ -307,6 +307,12 @@ async def remove_user_from_chat(
         chat_type=ChatTypeEnum.group,
     )
     if not user_in_chat or user_in_chat.user_id == current_user.user_id:
+        logger.error(
+            "User not in chat or trying remove himself."
+            " user_id=%s, chat_id=%s",
+            body.user_id,
+            body.chat_id,
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ChatUserActionStatusEnum.user_not_in_chat,

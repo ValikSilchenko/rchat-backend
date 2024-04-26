@@ -216,7 +216,31 @@ async def get_private_chat_for_new_message(
 
 
 async def get_user_id_from_socket_session(sid: str) -> UUID5:
+    """
+    Получает uuid пользователя по socketio session id.
+    """
     async with sio.session(sid) as io_session:
         user_id = io_session["user_id"]
 
     return user_id
+
+
+async def mark_unread_messages_before_as_read(
+    chat_id: UUID4, before_message_id: UUID4, user_id: UUID5
+):
+    """
+    Помечает все непрочитанные сообщения до указанного как прочитанные.
+    Сообщения, отправленные самим пользователем исключаются.
+    """
+    unread_messages_before = (
+        await app_state.message_repo.get_unread_messages_before_for_user(
+            chat_id=chat_id,
+            before_message_id=before_message_id,
+            user_id=user_id,
+        )
+    )
+    for message_id in unread_messages_before:
+        await app_state.message_repo.mark_message_as_read(
+            message_id=message_id,
+            read_by_user=user_id,
+        )

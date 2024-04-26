@@ -1,5 +1,4 @@
 import logging
-import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import UUID4
@@ -20,6 +19,7 @@ from rchat.views.message.helpers import (
     get_chat_messages_list,
     get_private_chat_for_new_message,
     get_user_id_from_socket_session,
+    mark_unread_messages_before_as_read,
 )
 from rchat.views.message.models import (
     ChatMessagesResponse,
@@ -147,7 +147,6 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
 
     message_create_model = MessageCreate(
         **message_body.model_dump(exclude={"chat_id"}),
-        id=uuid.uuid4(),
         chat_id=chat.id,
         type=MessageTypeEnum.text,
         sender_user_id=sender_user_id,
@@ -155,6 +154,11 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
     await create_and_send_message(
         message_create=message_create_model,
         chat=chat,
+    )
+    await mark_unread_messages_before_as_read(
+        chat_id=chat.id,
+        before_message_id=message_create_model.id,
+        user_id=sender_user_id,
     )
 
 
@@ -165,7 +169,7 @@ async def handle_read_message(sid, read_message_body: ReadMessageBody):
     message = await app_state.message_repo.get_by_id(
         id_=read_message_body.message_id
     )
-    if not message:
+    if not message or message.chat_id != read_message_body.chat_id:
         logger.error(
             "Message not found. message_id=%s, user_id=%s",
             read_message_body.message_id,
@@ -215,7 +219,7 @@ async def handle_read_message(sid, read_message_body: ReadMessageBody):
 
     is_marked = await app_state.message_repo.mark_message_as_read(
         message_id=read_message_body.message_id,
-        user_id=user_id,
+        read_by_user=user_id,
     )
     if not is_marked:
         logger.error(
@@ -232,8 +236,14 @@ async def handle_read_message(sid, read_message_body: ReadMessageBody):
         )
         return
 
+    await mark_unread_messages_before_as_read(
+        chat_id=read_message_body.chat_id,
+        before_message_id=read_message_body.message_id,
+        user_id=user_id,
+    )
+
     read_message_response = ReadMessageResponse(
-        message_id=message.id, read_by_user=user_id
+        chat_id=message.chat_id, message_id=message.id, read_by_user=user_id
     )
     for user in chat_participants:
         if user in sio.users:

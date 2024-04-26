@@ -142,6 +142,9 @@ class ChatRepository:
                 c.id,
                 c.type,
                 c.name,
+                c.is_work_chat,
+                c.allow_messages_from,
+                c.allow_messages_to,
                 c.avatar_photo_id,
                 c.description,
                 c.created_timestamp
