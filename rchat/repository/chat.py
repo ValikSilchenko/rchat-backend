@@ -192,12 +192,17 @@ class ChatRepository:
         return [ChatParticipantWithInfo(**dict(row)) for row in rows]
 
     async def get_user_in_chat(
-        self, chat_id: UUID4, user_id: UUID5, chat_type: ChatTypeEnum
+        self,
+        chat_id: UUID4,
+        user_id: UUID5,
+        chat_type: Optional[ChatTypeEnum] = None,
     ) -> Optional[ChatParticipant]:
         sql = """
             select * from "chat_user"
             left join "chat" on "chat"."id" = "chat_user"."chat_id"
-            where "chat_id" = $1 and "user_id" = $2 and "type" = $3
+            where "chat_id" = $1
+            and "user_id" = $2
+            and ("type" is null or "type" = $3)
         """
         async with self._db.acquire() as c:
             row = await c.fetchrow(sql, chat_id, user_id, chat_type)

@@ -3,7 +3,11 @@ from typing import Optional
 
 from pydantic import UUID4, UUID5
 
-from rchat.clients.socketio_client import SocketioEventsEnum, sio
+from rchat.clients.socketio_client import (
+    SocketioErrorStatusEnum,
+    SocketioEventsEnum,
+    sio,
+)
 from rchat.schemas.chat import Chat, ChatCreate, ChatTypeEnum
 from rchat.schemas.message import Message, MessageCreate
 from rchat.state import app_state
@@ -11,10 +15,12 @@ from rchat.views.chat.helpers import get_chat_name_and_avatar
 from rchat.views.message.models import (
     ActionUserParticipant,
     ChatInfo,
+    CreateMessageBody,
     ForeignMessage,
     MessageResponse,
     MessageSender,
     NewMessageResponse,
+    NewMessageStatusEnum,
 )
 
 logger = logging.getLogger(__name__)
@@ -244,3 +250,87 @@ async def mark_unread_messages_before_as_read(
             message_id=message_id,
             read_by_user=user_id,
         )
+
+
+async def validate_message_body_and_get_chat(
+    message_body: CreateMessageBody, sender_user_id: UUID5, sid
+) -> Optional[Chat]:
+    """
+    Проверяет правильность тела запроса на создание сообщения
+    и возвращает модель чата для этого сообщения.
+
+    В случае неправильного тела запроса, пользователю
+    отправляется событие ошибки invalid_data.
+    """
+    if message_body.chat_id and message_body.other_user_public_id:
+        logger.error(
+            "chat_id and other_user_public_id both"
+            " not allowed in new_message."
+            "sender_user_id=%s",
+            sender_user_id,
+        )
+        await sio.emit_error_event(
+            to_sid=sid,
+            status=SocketioErrorStatusEnum.invalid_data,
+            event_name=SocketioEventsEnum.new_message,
+            error_msg=NewMessageStatusEnum.two_chat_identifiers_provided,
+            data=message_body.model_dump_json(),
+        )
+        return
+
+    if message_body.other_user_public_id:
+        other_user = await app_state.user_repo.get_by_public_id(
+            message_body.other_user_public_id
+        )
+        if not other_user:
+            logger.error(
+                "Other user not found."
+                " other_user_public_id=%s, sender_user_id=%s",
+                message_body.other_user_public_id,
+                sender_user_id,
+            )
+            await sio.emit_error_event(
+                to_sid=sid,
+                status=SocketioErrorStatusEnum.invalid_data,
+                event_name=SocketioEventsEnum.new_message,
+                error_msg=NewMessageStatusEnum.user_not_found,
+                data=message_body.model_dump_json(),
+            )
+            return
+
+        chat = await get_private_chat_for_new_message(
+            user_id_1=sender_user_id, user_id_2=other_user.id
+        )
+    elif message_body.chat_id:
+        chat = await app_state.chat_repo.get_by_id(
+            chat_id=message_body.chat_id
+        )
+        if not chat:
+            logger.error(
+                "Chat not found. chat_id=%s, sender_user_id=%s",
+                message_body.chat_id,
+                sender_user_id,
+            )
+            await sio.emit_error_event(
+                to_sid=sid,
+                status=SocketioErrorStatusEnum.invalid_data,
+                event_name=SocketioEventsEnum.new_message,
+                error_msg=NewMessageStatusEnum.chat_not_found,
+                data=message_body.model_dump_json(),
+            )
+            return
+    else:
+        logger.error(
+            "No sender were provided. sender_user_id=%s",
+            sender_user_id,
+        )
+        await sio.emit_error_event(
+            to_sid=sid,
+            status=SocketioErrorStatusEnum.invalid_data,
+            event_name=SocketioEventsEnum.new_message,
+            error_msg=NewMessageStatusEnum.no_message_sender_provided,
+            data=message_body.model_dump_json(),
+        )
+        return
+
+    return chat

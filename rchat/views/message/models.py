@@ -100,10 +100,13 @@ class ChatMessagesStatusEnum(StrEnum):
     user_not_in_chat = "user_not_in_chat"
 
 
-class NewMessageEventStatusEnum(StrEnum):
+class NewMessageStatusEnum(StrEnum):
     user_not_found = "user_not_found"
     chat_not_found = "chat_not_found"
     no_message_sender_provided = "no_message_sender_provided"
+    two_chat_identifiers_provided = "two_chat_identifiers_provided"
+    cannot_reply_this_message = "cannot_reply_this_message"
+    cannot_forward_this_message = "cannot_forward_this_message"
 
 
 class ReadMessageBody(BaseModel):
