@@ -18,13 +18,17 @@ from rchat.views.auth.helpers import check_access_token
 from rchat.views.message.helpers import (
     create_and_send_message,
     get_chat_messages_list,
-    get_private_chat_for_new_message, get_user_id_from_socket_session,
+    get_private_chat_for_new_message,
+    get_user_id_from_socket_session,
 )
 from rchat.views.message.models import (
     ChatMessagesResponse,
     ChatMessagesStatusEnum,
     CreateMessageBody,
-    NewMessageEventStatusEnum, ReadMessageBody, ReadMessageResponse, ReadMessageStatusEnum,
+    NewMessageEventStatusEnum,
+    ReadMessageBody,
+    ReadMessageResponse,
+    ReadMessageStatusEnum,
 )
 
 logger = logging.getLogger(__name__)
@@ -158,7 +162,9 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
 async def handle_read_message(sid, read_message_body: ReadMessageBody):
     user_id = await get_user_id_from_socket_session(sid)
 
-    message = await app_state.message_repo.get_by_id(id_=read_message_body.message_id)
+    message = await app_state.message_repo.get_by_id(
+        id_=read_message_body.message_id
+    )
     if not message:
         logger.error(
             "Message not found. message_id=%s, user_id=%s",
@@ -221,4 +227,3 @@ async def handle_read_message(sid, read_message_body: ReadMessageBody):
                 to=sio.users[user],
                 data=read_message_response.model_dump_json(),
             )
-

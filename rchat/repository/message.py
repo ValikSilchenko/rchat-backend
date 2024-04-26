@@ -74,7 +74,9 @@ class MessageRepository:
 
         return Message(**dict(row))
 
-    async def mark_message_as_read(self, message_id: UUID4, read_by_user: UUID5) -> bool:
+    async def mark_message_as_read(
+        self, message_id: UUID4, read_by_user: UUID5
+    ) -> bool:
         """
         Помечает сообщение как прочитанное.
         """

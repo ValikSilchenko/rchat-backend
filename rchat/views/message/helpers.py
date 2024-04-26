@@ -55,6 +55,9 @@ async def get_chat_messages_list(
         reply_to_message = await get_foreign_message(message.reply_to_message)
 
         message_sender = await get_message_sender(message)
+        read_by_users = await app_state.message_repo.get_read_user_id_list(
+            message_id=message.id
+        )
         response_messages.append(
             MessageResponse(
                 **message.model_dump(
@@ -64,6 +67,7 @@ async def get_chat_messages_list(
                 reply_to_message=reply_to_message,
                 sender=message_sender,
                 created_at=message.created_timestamp,
+                read_by_users=read_by_users,
             )
         )
     return response_messages
