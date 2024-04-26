@@ -74,6 +74,8 @@ class MessageResponse(BaseModel):
     video_msg_file_link: str | None = None
     reply_to_message: ForeignMessage | None = None
     forwarded_message: ForeignMessage | None = None
+    user_initiated_action: UUID5 | None = None
+    user_involved: UUID5 | None = None
     is_silent: bool
     last_edited_at: datetime | None = None
     created_at: datetime
