@@ -189,7 +189,7 @@ async def get_chat_users(
             ),
             chat_role=user.role,
             last_online=user.last_online,
-            can_exclude=current_user.id != user.id
+            can_exclude=current_user.user_id != user.id
             and (
                 current_user.role == UserChatRole.owner
                 or current_user.id == user.added_by_user
