@@ -107,6 +107,7 @@ class ReadMessageStatusEnum(StrEnum):
     message_not_found = "message_not_found"
     user_not_in_chat = "user_not_in_chat"
     user_already_read_the_message = "user_already_read_the_message"
+    user_cannot_read_own_message = "user_cannot_read_own_message"
 
 
 class ReadMessageResponse(BaseModel):

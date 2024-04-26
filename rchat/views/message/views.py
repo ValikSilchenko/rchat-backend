@@ -198,6 +198,21 @@ async def handle_read_message(sid, read_message_body: ReadMessageBody):
         )
         return
 
+    if user_id == message.sender_user_id:
+        logger.error(
+            "Cannot read own message. message_id=%s, user_id=%s",
+            message.id,
+            user_id,
+        )
+        await sio.emit_error_event(
+            to_sid=sid,
+            status=SocketioErrorStatusEnum.invalid_data,
+            event_name=SocketioEventsEnum.read_message,
+            error_msg=ReadMessageStatusEnum.user_cannot_read_own_message,
+            data=read_message_body.model_dump_json(),
+        )
+        return
+
     is_marked = await app_state.message_repo.mark_message_as_read(
         message_id=read_message_body.message_id,
         user_id=user_id,
