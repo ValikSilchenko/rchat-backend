@@ -337,12 +337,8 @@ async def remove_user_from_chat(
             detail=ChatUserActionStatusEnum.permission_denied,
         )
 
-    await app_state.chat_repo.delete_chat_participant(
-        chat_id=body.chat_id,
-        user_id=body.user_id,
-    )
     message_create_model = MessageCreate(
-        type=MessageTypeEnum.user_joined,
+        type=MessageTypeEnum.user_removed,
         chat_id=chat.id,
         sender_chat_id=chat.id,
         user_initiated_action=current_user.user_id,
@@ -351,4 +347,8 @@ async def remove_user_from_chat(
     await create_and_send_message(
         message_create=message_create_model,
         chat=chat,
+    )
+    await app_state.chat_repo.delete_chat_participant(
+        chat_id=body.chat_id,
+        user_id=body.user_id,
     )

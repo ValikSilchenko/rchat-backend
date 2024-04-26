@@ -65,7 +65,7 @@ async def get_group_chat_with_user(
     Получает чат и пользователя в этом чате.
     :raises HTTPException: Если чат или пользователь в этом чате не найден.
     """
-    chat = await app_state.chat_repo.get_by_id(id_=chat_id)
+    chat = await app_state.chat_repo.get_by_id(chat_id=chat_id)
     if not chat or chat.type != ChatTypeEnum.group:
         logger.error(
             "Group chat not found. chat_id=%s, session=%s",
