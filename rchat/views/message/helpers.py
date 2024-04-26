@@ -14,7 +14,6 @@ from rchat.views.message.models import (
     MessageResponse,
     MessageSender,
     NewMessageResponse,
-    UserCreatedChat,
 )
 
 logger = logging.getLogger(__name__)

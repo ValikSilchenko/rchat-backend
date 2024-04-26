@@ -3,7 +3,7 @@ from enum import StrEnum
 
 from pydantic import UUID4, UUID5, BaseModel
 
-from rchat.schemas.chat import ChatTypeEnum, UserChatRole, UserCreatedChat
+from rchat.schemas.chat import ChatTypeEnum, UserChatRole
 from rchat.schemas.message import MessageTypeEnum
 from rchat.views.message.models import MessageSender
 

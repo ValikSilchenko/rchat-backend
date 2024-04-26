@@ -8,7 +8,6 @@ from rchat.schemas.chat import (
     ChatCreate,
     ChatTypeEnum,
     UserChatRole,
-    UserCreatedChat,
 )
 from rchat.schemas.message import MessageCreate, MessageTypeEnum
 from rchat.schemas.session import Session
@@ -16,7 +15,7 @@ from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
 from rchat.views.chat.helpers import (
     get_chat_name_and_avatar,
-    is_group_chat_with_user_exists,
+    get_group_chat_with_user, check_permissions_to_add,
 )
 from rchat.views.chat.models import (
     AddUserInChatBody,
@@ -142,6 +141,7 @@ async def create_group_chat(
         type=MessageTypeEnum.created_chat,
         chat_id=chat.id,
         sender_chat_id=chat.id,
+        user_initiated_action=owner_user.id,
     )
     await create_and_send_message(
         message_create=message_create_model,
@@ -169,14 +169,11 @@ async def create_group_chat(
 async def get_chat_users(
     chat_id: UUID4, session: Session = Depends(check_access_token)
 ):
-    await is_group_chat_with_user_exists(chat_id=chat_id, session=session)
+    _, current_user = await get_group_chat_with_user(chat_id=chat_id, session=session)
 
     chat_users = await app_state.chat_repo.get_chat_users_with_roles(
         chat_id=chat_id
     )
-    current_user = list(
-        filter(lambda user: user.id == session.user_id, chat_users)
-    )[0]
 
     chat_users = [
         ChatUser(
@@ -209,14 +206,14 @@ async def add_user_to_chat(
     body: AddUserInChatBody,
     session: Session = Depends(check_access_token),
 ):
-    current_user = await is_group_chat_with_user_exists(
+    chat, current_user = await get_group_chat_with_user(
         chat_id=body.chat_id, session=session
     )
 
     user_to_add = await app_state.user_repo.get_by_id(id_=body.user_id)
     if not user_to_add:
         logger.error(
-            "User not found. user_id=%s, session=%s",
+            "User to add not found. user_id=%s, session=%s",
             body.user_id,
             session.id,
         )
@@ -236,39 +233,13 @@ async def add_user_to_chat(
             detail=ChatUserActionStatusEnum.user_already_in_chat,
         )
 
-    is_forbidden = False
-    if not user_in_chat and body.role not in {
-        UserChatRole.member,
-        UserChatRole.observer,
-    }:
-        is_forbidden = True
+    is_can_add = await check_permissions_to_add(
+        user_who_add=current_user,
+        user_in_chat=user_in_chat,
+        new_user_role=body.role,
+    )
 
-    match current_user.role:
-        case UserChatRole.observer:
-            is_forbidden = True
-        case UserChatRole.member:
-            if user_in_chat:
-                is_forbidden = True
-        case UserChatRole.admin:
-            if user_in_chat and user_in_chat.role in {
-                UserChatRole.admin,
-                UserChatRole.owner,
-            }:
-                is_forbidden = True
-            elif user_in_chat and body.role not in {
-                UserChatRole.member,
-                UserChatRole.observer,
-            }:
-                is_forbidden = True
-        case UserChatRole.owner:
-            if user_in_chat and body.role == UserChatRole.owner:
-                await app_state.chat_repo.add_chat_participant(
-                    chat_id=body.chat_id,
-                    user_id=current_user.user_id,
-                    role=UserChatRole.admin,
-                )
-
-    if is_forbidden:
+    if not is_can_add:
         logger.error(
             "Permission denied to add user with such role."
             " session=%s, user_to_add=%s, user_to_add_role=%s",
@@ -281,11 +252,28 @@ async def add_user_to_chat(
             detail=ChatUserActionStatusEnum.permission_denied,
         )
 
+    if current_user.role == UserChatRole.owner and user_in_chat and body.role == UserChatRole.owner:
+        await app_state.chat_repo.add_chat_participant(
+            chat_id=body.chat_id,
+            user_id=current_user.user_id,
+            role=UserChatRole.admin,
+        )
     await app_state.chat_repo.add_chat_participant(
-        chat_id=body.chat_id,
+        chat_id=chat.id,
         user_id=user_to_add.id,
         added_by_user=session.user_id,
         role=body.role,
+    )
+    message_create_model = MessageCreate(
+        type=MessageTypeEnum.user_joined,
+        chat_id=chat.id,
+        sender_chat_id=chat.id,
+        user_initiated_action=current_user.user_id,
+        user_involved=user_to_add.id,
+    )
+    await create_and_send_message(
+        message_create=message_create_model,
+        chat=chat,
     )
 
 
@@ -294,15 +282,16 @@ async def remove_user_from_chat(
         body: RemoveUserFromChatBody,
         session: Session = Depends(check_access_token),
 ):
-    current_user = await is_group_chat_with_user_exists(
+    chat, current_user = await get_group_chat_with_user(
         chat_id=body.chat_id, session=session
     )
+
     user_in_chat = await app_state.chat_repo.get_user_in_chat(
         chat_id=body.chat_id,
         user_id=body.user_id,
         chat_type=ChatTypeEnum.group,
     )
-    if not user_in_chat:
+    if not user_in_chat or user_in_chat.user_id == current_user.user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ChatUserActionStatusEnum.user_not_in_chat
@@ -334,4 +323,15 @@ async def remove_user_from_chat(
     await app_state.chat_repo.delete_chat_participant(
         chat_id=body.chat_id,
         user_id=body.user_id,
+    )
+    message_create_model = MessageCreate(
+        type=MessageTypeEnum.user_joined,
+        chat_id=chat.id,
+        sender_chat_id=chat.id,
+        user_initiated_action=current_user.user_id,
+        user_involved=user_in_chat.user_id,
+    )
+    await create_and_send_message(
+        message_create=message_create_model,
+        chat=chat,
     )
