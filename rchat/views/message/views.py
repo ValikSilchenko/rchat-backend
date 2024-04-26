@@ -232,6 +232,19 @@ async def handle_read_message(sid, read_message_body: ReadMessageBody):
         )
         return
 
+    unread_messages_before = (
+        await app_state.message_repo.get_unread_messages_before_for_user(
+            chat_id=read_message_body.chat_id,
+            before_message_id=read_message_body.message_id,
+            user_id=user_id,
+        )
+    )
+    for message_id in unread_messages_before:
+        await app_state.message_repo.mark_message_as_read(
+            message_id=message_id,
+            read_by_user=user_id,
+        )
+
     read_message_response = ReadMessageResponse(
         chat_id=message.chat_id, message_id=message.id, read_by_user=user_id
     )

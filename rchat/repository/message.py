@@ -99,4 +99,21 @@ class MessageRepository:
         async with self._db.acquire() as c:
             rows = await c.fetch(sql, message_id)
 
-        return [UUID5(row["user_id"]) for row in rows]
+        return [UUID5(str(row["user_id"])) for row in rows]
+
+    async def get_unread_messages_before_for_user(
+            self, chat_id: UUID4, before_message_id: UUID4, user_id: UUID5
+    ) -> list[UUID4]:
+        sql = """
+            select "id" from "message"
+            where "chat_id" = $1
+            and ("sender_user_id" is null or "sender_user_id" <> $3)
+            and "created_timestamp" < (
+                select "created_timestamp" from "message"
+                where "id" = $2
+            )
+        """
+        async with self._db.acquire() as c:
+            rows = await c.fetch(sql, chat_id, before_message_id, user_id)
+
+        return [UUID5(str(row["id"])) for row in rows]
