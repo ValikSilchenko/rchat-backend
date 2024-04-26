@@ -3,7 +3,7 @@ from enum import StrEnum
 
 from pydantic import UUID4, UUID5, BaseModel
 
-from rchat.schemas.chat import ChatTypeEnum, UserCreatedChat
+from rchat.schemas.chat import ChatTypeEnum
 from rchat.schemas.message import MessageTypeEnum
 
 
@@ -54,12 +54,16 @@ class ChatInfo(BaseModel):
     id: UUID4
     type: ChatTypeEnum
     name: str | None = None
-    created_by: UserCreatedChat | None
     is_work_chat: bool
     allow_messages_from: time | None
     allow_messages_to: time | None
     avatar_photo_url: str | None = None
     created_at: datetime
+
+
+class ActionUserParticipant(BaseModel):
+    id: UUID5
+    first_name: str
 
 
 class MessageResponse(BaseModel):
@@ -75,6 +79,8 @@ class MessageResponse(BaseModel):
     video_msg_file_link: str | None = None
     reply_to_message: ForeignMessage | None = None
     forwarded_message: ForeignMessage | None = None
+    user_initiated_action: ActionUserParticipant | None = None
+    user_involved: ActionUserParticipant | None = None
     is_silent: bool
     last_edited_at: datetime | None = None
     created_at: datetime
@@ -98,3 +104,19 @@ class NewMessageEventStatusEnum(StrEnum):
     user_not_found = "user_not_found"
     chat_not_found = "chat_not_found"
     no_message_sender_provided = "no_message_sender_provided"
+
+
+class ReadMessageBody(BaseModel):
+    message_id: UUID4
+
+
+class ReadMessageStatusEnum(StrEnum):
+    message_not_found = "message_not_found"
+    user_not_in_chat = "user_not_in_chat"
+    user_already_read_the_message = "user_already_read_the_message"
+    user_cannot_read_own_message = "user_cannot_read_own_message"
+
+
+class ReadMessageResponse(BaseModel):
+    message_id: UUID4
+    read_by_user: UUID5

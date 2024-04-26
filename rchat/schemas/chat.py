@@ -22,7 +22,6 @@ class ChatCreate(BaseModel):
     id: UUID4 = Field(default_factory=lambda: uuid.uuid4())
     type: ChatTypeEnum
     name: str | None = None
-    created_by: UUID5 | None = None
     avatar_photo_id: UUID4 | None = None
     description: str | None = None
     is_work_chat: bool = False
@@ -34,18 +33,12 @@ class Chat(BaseModel):
     id: UUID4
     type: ChatTypeEnum
     name: str | None
-    created_by: UUID5 | None
     avatar_photo_id: UUID4 | None
     description: str | None
     is_work_chat: bool
     allow_messages_from: time | None
     allow_messages_to: time | None
     created_timestamp: datetime
-
-
-class UserCreatedChat(BaseModel):
-    id: UUID5
-    first_name: str
 
 
 class ChatParticipantWithInfo(BaseModel):
@@ -60,3 +53,4 @@ class ChatParticipantWithInfo(BaseModel):
 class ChatParticipant(BaseModel):
     user_id: UUID5
     role: UserChatRole
+    added_by_user: UUID5 | None

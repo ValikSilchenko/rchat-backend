@@ -103,7 +103,6 @@ class ChatRepository:
                 "chat"."id",
                 "chat"."type",
                 "chat"."name",
-                "chat"."created_by",
                 "chat"."avatar_photo_id",
                 "chat"."description",
                 "chat"."is_work_chat",
@@ -119,7 +118,6 @@ class ChatRepository:
                 "chat"."id",
                 "chat"."type",
                 "chat"."name",
-                "chat"."created_by",
                 "chat"."avatar_photo_id",
                 "chat"."description",
                 "chat"."is_work_chat",
@@ -205,3 +203,16 @@ class ChatRepository:
             return
 
         return ChatParticipant(**dict(row))
+
+    async def delete_chat_participant(
+        self, chat_id: UUID4, user_id: UUID5
+    ) -> bool:
+        sql = """
+            delete from "chat_user"
+            where "chat_id" = $1 and "user_id" = $2
+            returning true
+        """
+        async with self._db.acquire() as c:
+            row = await c.fetchrow(sql, chat_id, user_id)
+
+        return bool(row)

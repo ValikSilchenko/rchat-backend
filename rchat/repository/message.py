@@ -1,7 +1,7 @@
 from typing import Optional
 
 from asyncpg import Pool
-from pydantic import UUID4
+from pydantic import UUID4, UUID5
 
 from rchat.repository.helpers import build_model
 from rchat.schemas.message import Message, MessageCreate
@@ -73,3 +73,30 @@ class MessageRepository:
             return
 
         return Message(**dict(row))
+
+    async def mark_message_as_read(
+        self, message_id: UUID4, read_by_user: UUID5
+    ) -> bool:
+        """
+        Помечает сообщение как прочитанное.
+        """
+        sql = """
+            insert into "message_read" (message_id, user_id)
+            values ($1, $2)
+            on conflict do nothing
+            returning true
+        """
+        async with self._db.acquire() as c:
+            row = await c.fetchrow(sql, message_id, read_by_user)
+
+        return bool(row)
+
+    async def get_read_user_id_list(self, message_id: UUID4) -> list[UUID5]:
+        sql = """
+            select "user_id" from "message_read"
+            where "message_id" = $1
+        """
+        async with self._db.acquire() as c:
+            rows = await c.fetch(sql, message_id)
+
+        return [UUID5(row["user_id"]) for row in rows]

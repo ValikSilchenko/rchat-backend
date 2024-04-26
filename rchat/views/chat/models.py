@@ -3,7 +3,7 @@ from enum import StrEnum
 
 from pydantic import UUID4, UUID5, BaseModel
 
-from rchat.schemas.chat import ChatTypeEnum, UserChatRole, UserCreatedChat
+from rchat.schemas.chat import ChatTypeEnum, UserChatRole
 from rchat.schemas.message import MessageTypeEnum
 from rchat.views.message.models import MessageSender
 
@@ -39,7 +39,6 @@ class ChatListItem(BaseChatInfo):
     """
 
     type: ChatTypeEnum
-    created_by: UserCreatedChat | None
     last_message: LastChatMessage | None
 
 
@@ -68,6 +67,10 @@ class CreateGroupChatResponse(BaseModel):
 
 
 class ChatUser(BaseModel):
+    """
+    Модель информации о участнике чата.
+    """
+
     id: UUID5
     name: str
     avatar_photo_url: str | None
@@ -77,12 +80,21 @@ class ChatUser(BaseModel):
 
 
 class GetChatUsersResponse(BaseModel):
+    """
+    Модель участников чата.
+    """
+
     users: list[ChatUser]
 
 
 class ChatUserActionStatusEnum(StrEnum):
+    """
+    Статусы для действий добавления/удаления пользователей из чата.
+    """
+
     user_not_found = "user_not_found"
     user_already_in_chat = "user_already_in_chat"
+    user_not_in_chat = "user_not_in_chat"
     chat_not_found = "chat_not_found"
     permission_denied = "permission_denied"
 
@@ -91,3 +103,8 @@ class AddUserInChatBody(BaseModel):
     chat_id: UUID4
     user_id: UUID5
     role: UserChatRole
+
+
+class RemoveUserFromChatBody(BaseModel):
+    chat_id: UUID4
+    user_id: UUID5

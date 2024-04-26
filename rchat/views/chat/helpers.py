@@ -1,10 +1,16 @@
 import logging
+from typing import Optional
 
 from fastapi import HTTPException
 from pydantic import UUID5
 from starlette import status
 
-from rchat.schemas.chat import Chat, ChatParticipant, ChatTypeEnum
+from rchat.schemas.chat import (
+    Chat,
+    ChatParticipant,
+    ChatTypeEnum,
+    UserChatRole,
+)
 from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.chat.models import ChatUserActionStatusEnum
@@ -52,15 +58,17 @@ async def get_chat_name_and_avatar(
     return chat.name, chat_avatar
 
 
-async def is_group_chat_with_user_exists(
+async def get_group_chat_with_user(
     chat_id: str, session: Session
-) -> ChatParticipant:
-    user_in_chat = await app_state.chat_repo.get_user_in_chat(
-        chat_id=chat_id, user_id=session.user_id, chat_type=ChatTypeEnum.group
-    )
-    if not user_in_chat:
+) -> tuple[Chat, ChatParticipant]:
+    """
+    Получает чат и пользователя в этом чате.
+    :raises HTTPException: Если чат или пользователь в этом чате не найден.
+    """
+    chat = await app_state.chat_repo.get_by_id(chat_id=chat_id)
+    if not chat or chat.type != ChatTypeEnum.group:
         logger.error(
-            "Group chat with user not found. chat_id=%s, session=%s",
+            "Group chat not found. chat_id=%s, session=%s",
             chat_id,
             session.id,
         )
@@ -68,4 +76,54 @@ async def is_group_chat_with_user_exists(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ChatUserActionStatusEnum.chat_not_found,
         )
-    return user_in_chat
+    user_in_chat = await app_state.chat_repo.get_user_in_chat(
+        chat_id=chat.id, user_id=session.user_id, chat_type=ChatTypeEnum.group
+    )
+    if not user_in_chat:
+        logger.error(
+            "Group chat with user not found. chat_id=%s, session=%s",
+            chat.id,
+            session.id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ChatUserActionStatusEnum.chat_not_found,
+        )
+    return chat, user_in_chat
+
+
+async def check_permissions_to_add(
+    user_who_add: ChatParticipant,
+    user_in_chat: Optional[ChatParticipant],
+    new_user_role: UserChatRole,
+) -> bool:
+    """
+    Проверяет, что пользователь
+    может добавить другого пользователя с переданной ролью.
+    """
+    is_forbidden = False
+    if not user_in_chat and new_user_role not in {
+        UserChatRole.member,
+        UserChatRole.observer,
+    }:
+        is_forbidden = True
+
+    match user_who_add.role:
+        case UserChatRole.observer:
+            is_forbidden = True
+        case UserChatRole.member:
+            if user_in_chat:
+                is_forbidden = True
+        case UserChatRole.admin:
+            if user_in_chat and user_in_chat.role in {
+                UserChatRole.admin,
+                UserChatRole.owner,
+            }:
+                is_forbidden = True
+            elif user_in_chat and new_user_role not in {
+                UserChatRole.member,
+                UserChatRole.observer,
+            }:
+                is_forbidden = True
+
+    return not is_forbidden

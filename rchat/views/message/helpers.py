@@ -9,12 +9,12 @@ from rchat.schemas.message import Message, MessageCreate
 from rchat.state import app_state
 from rchat.views.chat.helpers import get_chat_name_and_avatar
 from rchat.views.message.models import (
+    ActionUserParticipant,
     ChatInfo,
     ForeignMessage,
     MessageResponse,
     MessageSender,
     NewMessageResponse,
-    UserCreatedChat,
 )
 
 logger = logging.getLogger(__name__)
@@ -39,6 +39,28 @@ async def get_foreign_message(
     )
 
 
+async def get_actioned_users(
+    message: Message,
+) -> tuple[ActionUserParticipant, ActionUserParticipant]:
+    user_initiated_action = None
+    if message.user_initiated_action:
+        user = await app_state.user_repo.get_by_id(
+            id_=message.user_initiated_action
+        )
+        user_initiated_action = ActionUserParticipant(
+            id=user.id, first_name=user.first_name
+        )
+
+    user_involved = None
+    if message.user_involved:
+        user = await app_state.user_repo.get_by_id(id_=message.user_involved)
+        user_involved = ActionUserParticipant(
+            id=user.id, first_name=user.first_name
+        )
+
+    return user_initiated_action, user_involved
+
+
 async def get_chat_messages_list(
     chat_id: UUID4, limit: int, last_order_id: int
 ):
@@ -56,15 +78,31 @@ async def get_chat_messages_list(
         reply_to_message = await get_foreign_message(message.reply_to_message)
 
         message_sender = await get_message_sender(message)
+        read_by_users = await app_state.message_repo.get_read_user_id_list(
+            message_id=message.id
+        )
+
+        user_initiated_action, user_involved = await get_actioned_users(
+            message
+        )
+
         response_messages.append(
             MessageResponse(
                 **message.model_dump(
-                    exclude={"forwarded_message", "reply_to_message"}
+                    exclude={
+                        "user_initiated_action",
+                        "user_involved",
+                        "forwarded_message",
+                        "reply_to_message",
+                    }
                 ),
                 forwarded_message=forwarded_message,
                 reply_to_message=reply_to_message,
                 sender=message_sender,
                 created_at=message.created_timestamp,
+                read_by_users=read_by_users,
+                user_initiated_action=user_initiated_action,
+                user_involved=user_involved,
             )
         )
     return response_messages
@@ -103,7 +141,6 @@ async def get_message_sender(message: Message) -> MessageSender:
 async def create_and_send_message(
     message_create: MessageCreate,
     chat: Chat,
-    group_created_by: Optional[UserCreatedChat] = None,
 ):
     """
     Создаёт сообщение из переданной модели
@@ -121,17 +158,22 @@ async def create_and_send_message(
         type=chat.type,
         description=chat.description,
         created_at=chat.created_timestamp,
-        created_by=group_created_by,
         is_work_chat=chat.is_work_chat,
         allow_messages_from=chat.allow_messages_from,
         allow_messages_to=chat.allow_messages_to,
     )
 
+    user_initiated_action, user_involved = await get_actioned_users(message)
+
     message_response = NewMessageResponse(
-        **message.model_dump(),
+        **message.model_dump(
+            exclude={"user_initiated_action", "user_involved"}
+        ),
         chat=chat_info,
         sender=await get_message_sender(message),
         created_at=message.created_timestamp,
+        user_initiated_action=user_initiated_action,
+        user_involved=user_involved,
     )
     for participant in chat_participants:
         if participant in sio.users:
@@ -171,3 +213,10 @@ async def get_private_chat_for_new_message(
         )
 
     return chat
+
+
+async def get_user_id_from_socket_session(sid: str) -> UUID5:
+    async with sio.session(sid) as io_session:
+        user_id = io_session["user_id"]
+
+    return user_id
