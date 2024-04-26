@@ -4,18 +4,15 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import UUID4
 from starlette import status
 
-from rchat.schemas.chat import (
-    ChatCreate,
-    ChatTypeEnum,
-    UserChatRole,
-)
+from rchat.schemas.chat import ChatCreate, ChatTypeEnum, UserChatRole
 from rchat.schemas.message import MessageCreate, MessageTypeEnum
 from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.auth.helpers import check_access_token
 from rchat.views.chat.helpers import (
+    check_permissions_to_add,
     get_chat_name_and_avatar,
-    get_group_chat_with_user, check_permissions_to_add,
+    get_group_chat_with_user,
 )
 from rchat.views.chat.models import (
     AddUserInChatBody,
@@ -28,7 +25,8 @@ from rchat.views.chat.models import (
     CreateGroupChatResponse,
     CreateGroupChatStatusEnum,
     GetChatUsersResponse,
-    LastChatMessage, RemoveUserFromChatBody,
+    LastChatMessage,
+    RemoveUserFromChatBody,
 )
 from rchat.views.message.helpers import (
     create_and_send_message,
@@ -169,7 +167,9 @@ async def create_group_chat(
 async def get_chat_users(
     chat_id: UUID4, session: Session = Depends(check_access_token)
 ):
-    _, current_user = await get_group_chat_with_user(chat_id=chat_id, session=session)
+    _, current_user = await get_group_chat_with_user(
+        chat_id=chat_id, session=session
+    )
 
     chat_users = await app_state.chat_repo.get_chat_users_with_roles(
         chat_id=chat_id
@@ -252,7 +252,11 @@ async def add_user_to_chat(
             detail=ChatUserActionStatusEnum.permission_denied,
         )
 
-    if current_user.role == UserChatRole.owner and user_in_chat and body.role == UserChatRole.owner:
+    if (
+        current_user.role == UserChatRole.owner
+        and user_in_chat
+        and body.role == UserChatRole.owner
+    ):
         await app_state.chat_repo.add_chat_participant(
             chat_id=body.chat_id,
             user_id=current_user.user_id,
@@ -279,8 +283,8 @@ async def add_user_to_chat(
 
 @router.delete(path="/chat/remove_user")
 async def remove_user_from_chat(
-        body: RemoveUserFromChatBody,
-        session: Session = Depends(check_access_token),
+    body: RemoveUserFromChatBody,
+    session: Session = Depends(check_access_token),
 ):
     chat, current_user = await get_group_chat_with_user(
         chat_id=body.chat_id, session=session
@@ -294,7 +298,7 @@ async def remove_user_from_chat(
     if not user_in_chat or user_in_chat.user_id == current_user.user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ChatUserActionStatusEnum.user_not_in_chat
+            detail=ChatUserActionStatusEnum.user_not_in_chat,
         )
 
     is_forbidden = False
@@ -305,7 +309,10 @@ async def remove_user_from_chat(
             if user_in_chat.added_by_user != current_user.user_id:
                 is_forbidden = True
         case UserChatRole.admin:
-            if user_in_chat.role not in {UserChatRole.observer, UserChatRole.member}:
+            if user_in_chat.role not in {
+                UserChatRole.observer,
+                UserChatRole.member,
+            }:
                 is_forbidden = True
 
     if is_forbidden:

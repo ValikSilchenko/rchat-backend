@@ -204,7 +204,9 @@ class ChatRepository:
 
         return ChatParticipant(**dict(row))
 
-    async def delete_chat_participant(self, chat_id: UUID4, user_id: UUID5) -> bool:
+    async def delete_chat_participant(
+        self, chat_id: UUID4, user_id: UUID5
+    ) -> bool:
         sql = """
             delete from "chat_user"
             where "chat_id" = $1 and "user_id" = $2

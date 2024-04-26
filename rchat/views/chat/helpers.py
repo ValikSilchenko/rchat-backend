@@ -5,7 +5,12 @@ from fastapi import HTTPException
 from pydantic import UUID5
 from starlette import status
 
-from rchat.schemas.chat import Chat, ChatParticipant, ChatTypeEnum, UserChatRole
+from rchat.schemas.chat import (
+    Chat,
+    ChatParticipant,
+    ChatTypeEnum,
+    UserChatRole,
+)
 from rchat.schemas.session import Session
 from rchat.state import app_state
 from rchat.views.chat.models import ChatUserActionStatusEnum
@@ -87,9 +92,9 @@ async def get_group_chat_with_user(
 
 
 async def check_permissions_to_add(
-        user_who_add: ChatParticipant,
-        user_in_chat: Optional[ChatParticipant],
-        new_user_role: UserChatRole,
+    user_who_add: ChatParticipant,
+    user_in_chat: Optional[ChatParticipant],
+    new_user_role: UserChatRole,
 ) -> bool:
     is_forbidden = False
     if not user_in_chat and new_user_role not in {
