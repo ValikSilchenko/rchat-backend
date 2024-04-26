@@ -97,3 +97,18 @@ class NewMessageEventStatusEnum(StrEnum):
     user_not_found = "user_not_found"
     chat_not_found = "chat_not_found"
     no_message_sender_provided = "no_message_sender_provided"
+
+
+class ReadMessageBody(BaseModel):
+    message_id: UUID4
+
+
+class ReadMessageStatusEnum(StrEnum):
+    message_not_found = "message_not_found"
+    user_not_in_chat = "user_not_in_chat"
+    user_already_read_the_message = "user_already_read_the_message"
+
+
+class ReadMessageResponse(BaseModel):
+    message_id: UUID4
+    read_by_user: UUID5

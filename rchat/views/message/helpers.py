@@ -168,3 +168,10 @@ async def get_private_chat_for_new_message(
         )
 
     return chat
+
+
+async def get_user_id_from_socket_session(sid: str) -> UUID5:
+    async with sio.session(sid) as io_session:
+        user_id = io_session["user_id"]
+
+    return user_id

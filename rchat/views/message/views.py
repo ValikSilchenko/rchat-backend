@@ -18,13 +18,13 @@ from rchat.views.auth.helpers import check_access_token
 from rchat.views.message.helpers import (
     create_and_send_message,
     get_chat_messages_list,
-    get_private_chat_for_new_message,
+    get_private_chat_for_new_message, get_user_id_from_socket_session,
 )
 from rchat.views.message.models import (
     ChatMessagesResponse,
     ChatMessagesStatusEnum,
     CreateMessageBody,
-    NewMessageEventStatusEnum,
+    NewMessageEventStatusEnum, ReadMessageBody, ReadMessageResponse, ReadMessageStatusEnum,
 )
 
 logger = logging.getLogger(__name__)
@@ -84,8 +84,7 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
     Если сообщение написано пользователю, с которым у отправителя нету чата,
     То создаётся чат и оба пользователя добавляются как участники чата.
     """
-    async with sio.session(sid) as io_session:
-        sender_user_id = io_session["user_id"]
+    sender_user_id = await get_user_id_from_socket_session(sid)
 
     if message_body.other_user_public_id:
         other_user = await app_state.user_repo.get_by_public_id(
@@ -153,3 +152,73 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
         message_create=message_create_model,
         chat=chat,
     )
+
+
+@sio.on(SocketioEventsEnum.read_message)
+async def handle_read_message(sid, read_message_body: ReadMessageBody):
+    user_id = await get_user_id_from_socket_session(sid)
+
+    message = await app_state.message_repo.get_by_id(id_=read_message_body.message_id)
+    if not message:
+        logger.error(
+            "Message not found. message_id=%s, user_id=%s",
+            read_message_body.message_id,
+            user_id,
+        )
+        await sio.emit_error_event(
+            to_sid=sid,
+            status=SocketioErrorStatusEnum.invalid_data,
+            event_name=SocketioEventsEnum.read_message,
+            error_msg=ReadMessageStatusEnum.message_not_found,
+            data=read_message_body.model_dump_json(),
+        )
+        return
+
+    chat_participants = await app_state.chat_repo.get_chat_participant_users(
+        chat_id=message.chat_id
+    )
+    if user_id not in chat_participants:
+        logger.error(
+            "User not in chat. chat_id=%s, user_id=%s",
+            message.chat_id,
+            user_id,
+        )
+        await sio.emit_error_event(
+            to_sid=sid,
+            status=SocketioErrorStatusEnum.invalid_data,
+            event_name=SocketioEventsEnum.read_message,
+            error_msg=ReadMessageStatusEnum.user_not_in_chat,
+            data=read_message_body.model_dump_json(),
+        )
+        return
+
+    is_marked = await app_state.message_repo.mark_message_as_read(
+        message_id=read_message_body.message_id,
+        user_id=user_id,
+    )
+    if not is_marked:
+        logger.error(
+            "User already read the message. message_id=%s, user_id=%s",
+            message.id,
+            user_id,
+        )
+        await sio.emit_error_event(
+            to_sid=sid,
+            status=SocketioErrorStatusEnum.invalid_data,
+            event_name=SocketioEventsEnum.read_message,
+            error_msg=ReadMessageStatusEnum.user_already_read_the_message,
+            data=read_message_body.model_dump_json(),
+        )
+        return
+
+    read_message_response = ReadMessageResponse(
+        message_id=message.id, read_by_user=user_id
+    )
+    for user in chat_participants:
+        if user in sio.users:
+            await sio.emit(
+                event=SocketioEventsEnum.read_message,
+                to=sio.users[user],
+                data=read_message_response.model_dump_json(),
+            )
+
