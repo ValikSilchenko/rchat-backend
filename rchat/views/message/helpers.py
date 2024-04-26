@@ -9,6 +9,7 @@ from rchat.schemas.message import Message, MessageCreate
 from rchat.state import app_state
 from rchat.views.chat.helpers import get_chat_name_and_avatar
 from rchat.views.message.models import (
+    ActionUserParticipant,
     ChatInfo,
     ForeignMessage,
     MessageResponse,
@@ -128,11 +129,31 @@ async def create_and_send_message(
         allow_messages_to=chat.allow_messages_to,
     )
 
+    user_initiated_action = None
+    if message.user_initiated_action:
+        user = await app_state.user_repo.get_by_id(
+            id_=message.user_initiated_action
+        )
+        user_initiated_action = ActionUserParticipant(
+            id=user.id, first_name=user.first_name
+        )
+
+    user_involved = None
+    if message.user_involved:
+        user = await app_state.user_repo.get_by_id(id_=message.user_involved)
+        user_involved = ActionUserParticipant(
+            id=user.id, first_name=user.first_name
+        )
+
     message_response = NewMessageResponse(
-        **message.model_dump(),
+        **message.model_dump(
+            exclude={"user_initiated_action", "user_involved"}
+        ),
         chat=chat_info,
         sender=await get_message_sender(message),
         created_at=message.created_timestamp,
+        user_initiated_action=user_initiated_action,
+        user_involved=user_involved,
     )
     for participant in chat_participants:
         if participant in sio.users:

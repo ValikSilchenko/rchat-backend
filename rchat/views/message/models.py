@@ -61,6 +61,11 @@ class ChatInfo(BaseModel):
     created_at: datetime
 
 
+class ActionUserParticipant(BaseModel):
+    id: UUID5
+    first_name: str
+
+
 class MessageResponse(BaseModel):
     """
     Модель сообщения для метода получения списка сообщения.
@@ -74,8 +79,8 @@ class MessageResponse(BaseModel):
     video_msg_file_link: str | None = None
     reply_to_message: ForeignMessage | None = None
     forwarded_message: ForeignMessage | None = None
-    user_initiated_action: UUID5 | None = None
-    user_involved: UUID5 | None = None
+    user_initiated_action: ActionUserParticipant | None = None
+    user_involved: ActionUserParticipant | None = None
     is_silent: bool
     last_edited_at: datetime | None = None
     created_at: datetime
