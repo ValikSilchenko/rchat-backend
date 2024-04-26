@@ -1,5 +1,7 @@
 import os
 
+ENVIRONMENT = os.environ["RCHAT_ENVIRONMENT"]
+
 SECRET_KEY = os.environ["RCHAT_SECRET_KEY"]
 BASE_BACKEND_URL = os.environ["RCHAT_BASE_BACKEND_URL"]
 

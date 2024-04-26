@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -6,7 +7,7 @@ from fastapi import FastAPI
 
 import rchat.clients.socketio_client as sio_client
 from rchat import migration_runner
-from rchat.conf import RELOAD_ENABLED
+from rchat.conf import ENVIRONMENT, RELOAD_ENABLED
 from rchat.exceptions import register_exception_handlers
 from rchat.helpers import create_storage_folders
 from rchat.log import setup_logging
@@ -25,6 +26,8 @@ logger = logging.getLogger(__name__)
 async def lifespan(_app: FastAPI):
     migration_runner.apply_migrations()
     create_storage_folders()
+    if ENVIRONMENT == "dev":
+        await asyncio.sleep(5)
     await app_state.startup()
     yield
     await app_state.shutdown()
