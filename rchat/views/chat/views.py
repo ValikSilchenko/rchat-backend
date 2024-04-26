@@ -289,7 +289,7 @@ async def add_user_to_chat(
         )
 
 
-@router.delete(path="/chat/remove_user")
+@router.put(path="/chat/remove_user")
 async def remove_user_from_chat(
     body: RemoveUserFromChatBody,
     session: Session = Depends(check_access_token),
