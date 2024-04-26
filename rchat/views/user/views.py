@@ -33,7 +33,7 @@ async def get_profile_data(session: Session = Depends(check_access_token)):
             app_state.media_repo.get_media_url(id_=user.avatar_photo_id)
             if user.avatar_photo_id
             else None
-        )
+        ),
     )
 
 
@@ -98,6 +98,11 @@ async def get_match_users(
             lambda user: FoundUser(
                 id=user.id,
                 public_id=user.public_id,
+                name=(
+                    f"{user.first_name} {user.last_name}"
+                    if user.last_name
+                    else user.first_name
+                ),
                 avatar_url=(
                     app_state.media_repo.get_media_url(
                         id_=user.avatar_photo_id

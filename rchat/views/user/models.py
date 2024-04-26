@@ -8,6 +8,7 @@ from rchat.views.auth.models import UserDataPatternEnum
 class FoundUser(BaseModel):
     id: UUID5
     public_id: str
+    name: str
     avatar_url: str | None
 
 

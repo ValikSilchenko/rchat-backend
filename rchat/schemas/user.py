@@ -20,4 +20,6 @@ class User(BaseModel):
 class UserFind(BaseModel):
     id: UUID5
     public_id: str
+    first_name: str
+    last_name: str | None
     avatar_photo_id: UUID4 | None
