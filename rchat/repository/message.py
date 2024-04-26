@@ -102,7 +102,7 @@ class MessageRepository:
         return [UUID5(str(row["user_id"])) for row in rows]
 
     async def get_unread_messages_before_for_user(
-            self, chat_id: UUID4, before_message_id: UUID4, user_id: UUID5
+        self, chat_id: UUID4, before_message_id: UUID4, user_id: UUID5
     ) -> list[UUID4]:
         sql = """
             select "id" from "message"
