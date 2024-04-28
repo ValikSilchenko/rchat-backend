@@ -3,9 +3,6 @@ version: '3'
 services:
   nginx:
     image: nginx_test
-    labels:
-      - "nginx.http.routers.nginx.rule=Host(`rchat-company.ru`)"
-      - "nginx.http.services.nginx.loadbalancer.server.port=80"
     volumes:
       - "/apps/nginx/www:/var/www"
       - "/etc/letsencrypt:/etc/letsencrypt"
@@ -14,6 +11,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - mode: host
     deploy:
       replicas: 1
       resources:
