@@ -23,10 +23,10 @@ class Message(BaseModel):
     message_text: str | None
     audio_msg_file_id: UUID4 | None
     video_msg_file_id: UUID4 | None
-    reply_to_message: UUID4 | None
-    forwarded_message: UUID4 | None
-    user_initiated_action: UUID5 | None
-    user_involved: UUID5 | None
+    reply_to_message_id: UUID4 | None
+    forwarded_message_id: UUID4 | None
+    user_initiated_action_id: UUID5 | None
+    user_involved_id: UUID5 | None
     is_silent: bool
     last_edited_at: datetime | None
     created_timestamp: datetime
@@ -41,8 +41,8 @@ class MessageCreate(BaseModel):
     message_text: str | None = None
     audio_msg_file_id: UUID4 | None = None
     video_msg_file_id: UUID4 | None = None
-    reply_to_message: UUID4 | None = None
-    forwarded_message: UUID4 | None = None
-    user_initiated_action: UUID5 | None = None
-    user_involved: UUID5 | None = None
+    reply_to_message_id: UUID4 | None = None
+    forwarded_message_id: UUID4 | None = None
+    user_initiated_action_id: UUID5 | None = None
+    user_involved_id: UUID5 | None = None
     is_silent: bool = False

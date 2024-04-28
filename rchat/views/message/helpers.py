@@ -49,17 +49,19 @@ async def get_actioned_users(
     message: Message,
 ) -> tuple[ActionUserParticipant, ActionUserParticipant]:
     user_initiated_action = None
-    if message.user_initiated_action:
+    if message.user_initiated_action_id:
         user = await app_state.user_repo.get_by_id(
-            id_=message.user_initiated_action
+            id_=message.user_initiated_action_id
         )
         user_initiated_action = ActionUserParticipant(
             id=user.id, first_name=user.first_name
         )
 
     user_involved = None
-    if message.user_involved:
-        user = await app_state.user_repo.get_by_id(id_=message.user_involved)
+    if message.user_involved_id:
+        user = await app_state.user_repo.get_by_id(
+            id_=message.user_involved_id
+        )
         user_involved = ActionUserParticipant(
             id=user.id, first_name=user.first_name
         )
@@ -79,9 +81,11 @@ async def get_chat_messages_list(
     response_messages = []
     for message in messages:
         forwarded_message = await get_foreign_message(
-            message.forwarded_message
+            message.forwarded_message_id
         )
-        reply_to_message = await get_foreign_message(message.reply_to_message)
+        reply_to_message = await get_foreign_message(
+            message.reply_to_message_id
+        )
 
         message_sender = await get_message_sender(message)
         read_by_users = await app_state.message_repo.get_read_user_id_list(
@@ -164,8 +168,8 @@ async def create_and_send_message(
 
     user_initiated_action, user_involved = await get_actioned_users(message)
 
-    reply_to_message = await get_foreign_message(message.reply_to_message)
-    forwarded_message = await get_foreign_message(message.forwarded_message)
+    reply_to_message = await get_foreign_message(message.reply_to_message_id)
+    forwarded_message = await get_foreign_message(message.forwarded_message_id)
 
     message_response = NewMessageResponse(
         **message.model_dump(),

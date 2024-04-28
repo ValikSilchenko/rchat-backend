@@ -138,9 +138,12 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
         )
         is_in_chat = None
         if message:
-            is_in_chat = await app_state.chat_repo.get_user_in_chat(
-                chat_id=message.chat_id, user_id=sender_user_id
+            chat_participants = (
+                await app_state.chat_repo.get_chat_participant_users(
+                    chat_id=message.chat_id
+                )
             )
+            is_in_chat = sender_user_id in chat_participants
         if not message or not is_in_chat:
             logger.error(
                 "Cannot forward this message. "
