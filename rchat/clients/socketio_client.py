@@ -115,8 +115,10 @@ asio_app = socketio.ASGIApp(socketio_server=sio, socketio_path="socks")
 @sio.event
 async def connect(sid, environ, _):
     try:
+        logger.info(environ)
         session = await check_access_token(
-            auth_data=environ["HTTP_AUTHORIZATION"]
+            auth_data=environ["HTTP_AUTHORIZATION"],
+            device_fingerprint=environ.get("HTTP_FINGERPRINT_ID", None),
         )
     except HTTPException:
         logger.error("Invalid token.")
