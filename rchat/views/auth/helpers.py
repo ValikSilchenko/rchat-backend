@@ -99,6 +99,7 @@ def get_decoded_token(auth_data: str) -> dict:
 
 async def check_access_token(
     auth_data: str = Header(alias="Authorization"),
+    device_fingerprint: str = Header(alias="Fingerprint-ID"),
 ) -> Session:
     """
     Проверяет access_token пользователя на валидность.
@@ -120,11 +121,20 @@ async def check_access_token(
         logger.error("Session expired. session_id=%s", session.id)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
+    if session.device_fingerprint != device_fingerprint:
+        logger.error(
+            "Device fingerprint mismatch."
+            " session_id=%s, fingerprint_header=%s",
+            session.id,
+            device_fingerprint,
+        )
+
     return session
 
 
 async def check_refresh_token(
     auth_data: str = Header(alias="Authorization"),
+    device_fingerprint: str = Header(alias="Fingerprint-ID"),
 ) -> Session:
     """
     Проверяет refresh_token пользователя на валидность.
@@ -143,5 +153,13 @@ async def check_refresh_token(
     if token_expire_at < datetime.now():
         logger.error("Refresh token expired. session_id=%s", session.id)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    if session.device_fingerprint != device_fingerprint:
+        logger.error(
+            "Device fingerprint mismatch."
+            " session_id=%s, fingerprint_header=%s",
+            session.id,
+            device_fingerprint,
+        )
 
     return session

@@ -24,13 +24,11 @@ router = APIRouter(tags=["Auth"])
 async def auth(
     body: AuthBody,
     user_agent: str | None = Header(default=None),
+    device_fingerprint: str = Header(alias="Fingerprint-ID"),
     x_forwarded_for: str | None = Header(default=None),
 ):
     """
     Метод аутентификации пользователя.
-    :param body: данные для аутентификации
-    :param user_agent:
-    :param x_forwarded_for:
     :return: токены доступа и обновления (access_token и refresh_token)
     """
     user = await get_user_by_login(login=body.login)
@@ -52,7 +50,10 @@ async def auth(
         await app_state.geoip_repo.get_data_by_ip(ip=client_ip)
 
     session = await app_state.session_repo.create(
-        user_id=user.id, ip=client_ip, user_agent=user_agent
+        user_id=user.id,
+        ip=client_ip,
+        user_agent=user_agent,
+        device_fingerprint=device_fingerprint,
     )
 
     tokens = generate_tokens(session=session, user=user)

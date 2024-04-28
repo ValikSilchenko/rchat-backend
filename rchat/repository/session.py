@@ -15,12 +15,14 @@ class SessionRepository:
     async def create(
         self,
         user_id: UUID5,
+        device_fingerprint: str,
         ip: str | None = None,
         user_agent: str | None = None,
     ) -> Session:
         """
         Создаёт сессию пользователя
         :param user_id: uuid пользователя
+        :param device_fingerprint: цифровой отпечаток устройства пользователя
         :param ip: ip-адресс пользователя (при наличии)
         :param user_agent: user_agent, с которого отправлен запрос
          (при наличии)
@@ -32,6 +34,7 @@ class SessionRepository:
             ip=ip,
             user_agent=user_agent,
             is_active=True,
+            device_fingerprint=device_fingerprint,
         )
         sql_build = build_model(model=session_data, exclude_none=True)
         sql = f"""

@@ -36,7 +36,7 @@ create table "session" (
     ip varchar(15),
     user_agent varchar(64),
     is_active bool not null default true,
-    device_fingerprint varchar(32),
+    device_fingerprint varchar(32) not null,
     created_timestamp timestamp not null default now()
 );
 

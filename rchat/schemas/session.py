@@ -10,7 +10,7 @@ class Session(BaseModel):
     country: str | None = None
     user_agent: str | None
     is_active: bool
-    device_fingerprint: str | None
+    device_fingerprint: str
     created_timestamp: datetime
 
 
@@ -20,3 +20,4 @@ class SessionCreate(BaseModel):
     ip: str | None = None
     user_agent: str | None
     is_active: bool
+    device_fingerprint: str
