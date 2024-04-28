@@ -99,7 +99,9 @@ def get_decoded_token(auth_data: str) -> dict:
 
 async def check_access_token(
     auth_data: str = Header(alias="Authorization"),
-    device_fingerprint: str = Header(alias="Fingerprint-ID"),
+    device_fingerprint: str | None = Header(
+        alias="Fingerprint-ID", default=None
+    ),
 ) -> Session:
     """
     Проверяет access_token пользователя на валидность.
@@ -128,13 +130,16 @@ async def check_access_token(
             session.id,
             device_fingerprint,
         )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     return session
 
 
 async def check_refresh_token(
     auth_data: str = Header(alias="Authorization"),
-    device_fingerprint: str = Header(alias="Fingerprint-ID"),
+    device_fingerprint: str | None = Header(
+        alias="Fingerprint-ID", default=None
+    ),
 ) -> Session:
     """
     Проверяет refresh_token пользователя на валидность.
@@ -161,5 +166,6 @@ async def check_refresh_token(
             session.id,
             device_fingerprint,
         )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     return session
