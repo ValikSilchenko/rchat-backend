@@ -94,14 +94,7 @@ async def get_chat_messages_list(
 
         response_messages.append(
             MessageResponse(
-                **message.model_dump(
-                    exclude={
-                        "user_initiated_action",
-                        "user_involved",
-                        "forwarded_message",
-                        "reply_to_message",
-                    }
-                ),
+                **message.model_dump(),
                 forwarded_message=forwarded_message,
                 reply_to_message=reply_to_message,
                 sender=message_sender,
@@ -171,15 +164,18 @@ async def create_and_send_message(
 
     user_initiated_action, user_involved = await get_actioned_users(message)
 
+    reply_to_message = await get_foreign_message(message.reply_to_message)
+    forwarded_message = await get_foreign_message(message.forwarded_message)
+
     message_response = NewMessageResponse(
-        **message.model_dump(
-            exclude={"user_initiated_action", "user_involved"}
-        ),
+        **message.model_dump(),
         chat=chat_info,
         sender=await get_message_sender(message),
         created_at=message.created_timestamp,
         user_initiated_action=user_initiated_action,
         user_involved=user_involved,
+        reply_to_message=reply_to_message,
+        forwarded_message=forwarded_message,
     )
     for participant in chat_participants:
         if participant in sio.users:
