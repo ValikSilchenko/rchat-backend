@@ -16,7 +16,7 @@ class GeoIPRepository:
     def __init__(self, db: Pool):
         self._db = db
 
-    async def get_data_by_ip(self, ip: str) -> Optional[GeoIPData]:
+    async def get_data_by_ip(self, ip: str) -> GeoIPData:
         """
         Получает информацию о геолокации по IP адресу,
         обновляет информацию если нужно.
@@ -29,7 +29,7 @@ class GeoIPRepository:
             row = await c.fetchrow(sql, ip)
 
         if not row:
-            return
+            return await self._save_geocoder_data(ip)
 
         return GeoIPData(**dict(row))
 
