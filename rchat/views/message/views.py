@@ -96,6 +96,24 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
     if not chat:
         return
 
+    chat_participants = await app_state.chat_repo.get_chat_participant_users(
+        chat_id=chat.id
+    )
+    if sender_user_id not in chat_participants:
+        logger.error(
+            "User not in chat. chat_id=%s, user_id=%s",
+            chat.id,
+            sender_user_id,
+        )
+        await sio.emit_error_event(
+            to_sid=sid,
+            status=SocketioErrorStatusEnum.invalid_data,
+            event_name=SocketioEventsEnum.new_message,
+            error_msg=NewMessageStatusEnum.chat_not_found,
+            data=message_body.model_dump_json(),
+        )
+        return
+
     if message_body.reply_to_message_id and message_body.forwarded_message_id:
         logger.error(
             "Cannot forward and reply to message simultaneously. "
