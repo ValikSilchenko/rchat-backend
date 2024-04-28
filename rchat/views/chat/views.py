@@ -139,7 +139,7 @@ async def create_group_chat(
         type=MessageTypeEnum.created_chat,
         chat_id=chat.id,
         sender_chat_id=chat.id,
-        user_initiated_action=owner_user.id,
+        user_initiated_action_id=owner_user.id,
     )
     await create_and_send_message(
         message_create=message_create_model,
@@ -280,8 +280,8 @@ async def add_user_to_chat(
             type=MessageTypeEnum.user_joined,
             chat_id=chat.id,
             sender_chat_id=chat.id,
-            user_initiated_action=current_user.user_id,
-            user_involved=user_to_add.id,
+            user_initiated_action_id=current_user.user_id,
+            user_involved_id=user_to_add.id,
         )
         await create_and_send_message(
             message_create=message_create_model,
@@ -348,8 +348,8 @@ async def remove_user_from_chat(
         type=MessageTypeEnum.user_removed,
         chat_id=chat.id,
         sender_chat_id=chat.id,
-        user_initiated_action=current_user.user_id,
-        user_involved=user_in_chat.user_id,
+        user_initiated_action_id=current_user.user_id,
+        user_involved_id=user_in_chat.user_id,
     )
     await create_and_send_message(
         message_create=message_create_model,

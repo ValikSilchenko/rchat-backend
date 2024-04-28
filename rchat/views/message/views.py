@@ -17,15 +17,15 @@ from rchat.views.auth.helpers import check_access_token
 from rchat.views.message.helpers import (
     create_and_send_message,
     get_chat_messages_list,
-    get_private_chat_for_new_message,
     get_user_id_from_socket_session,
     mark_unread_messages_before_as_read,
+    validate_message_body_and_get_chat,
 )
 from rchat.views.message.models import (
     ChatMessagesResponse,
     ChatMessagesStatusEnum,
     CreateMessageBody,
-    NewMessageEventStatusEnum,
+    NewMessageStatusEnum,
     ReadMessageBody,
     ReadMessageResponse,
     ReadMessageStatusEnum,
@@ -90,60 +90,76 @@ async def handle_new_message(sid, message_body: CreateMessageBody):
     """
     sender_user_id = await get_user_id_from_socket_session(sid)
 
-    if message_body.other_user_public_id:
-        other_user = await app_state.user_repo.get_by_public_id(
-            message_body.other_user_public_id
-        )
-        if not other_user:
-            logger.error(
-                "Other user not found."
-                " other_user_public_id=%s, sender_user_id=%s",
-                message_body.other_user_public_id,
-                sender_user_id,
-            )
-            await sio.emit_error_event(
-                to_sid=sid,
-                status=SocketioErrorStatusEnum.invalid_data,
-                event_name=SocketioEventsEnum.new_message,
-                error_msg=NewMessageEventStatusEnum.user_not_found,
-                data=message_body.model_dump_json(),
-            )
-            return
+    chat = await validate_message_body_and_get_chat(
+        message_body=message_body, sender_user_id=sender_user_id, sid=sid
+    )
+    if not chat:
+        return
 
-        chat = await get_private_chat_for_new_message(
-            user_id_1=sender_user_id, user_id_2=other_user.id
-        )
-    elif message_body.chat_id:
-        chat = await app_state.chat_repo.get_by_id(
-            chat_id=message_body.chat_id
-        )
-        if not chat:
-            logger.error(
-                "Chat not found. chat_id=%s, sender_user_id=%s",
-                message_body.chat_id,
-                sender_user_id,
-            )
-            await sio.emit_error_event(
-                to_sid=sid,
-                status=SocketioErrorStatusEnum.invalid_data,
-                event_name=SocketioEventsEnum.new_message,
-                error_msg=NewMessageEventStatusEnum.chat_not_found,
-                data=message_body.model_dump_json(),
-            )
-            return
-    else:
+    if message_body.reply_to_message_id and message_body.forwarded_message_id:
         logger.error(
-            "No sender were provided. sender_user_id=%s",
+            "Cannot forward and reply to message simultaneously. "
+            "user_id=%s",
             sender_user_id,
         )
         await sio.emit_error_event(
             to_sid=sid,
             status=SocketioErrorStatusEnum.invalid_data,
             event_name=SocketioEventsEnum.new_message,
-            error_msg=NewMessageEventStatusEnum.no_message_sender_provided,
+            error_msg=NewMessageStatusEnum.cannot_reply_this_message,
             data=message_body.model_dump_json(),
         )
         return
+
+    if message_body.reply_to_message_id:
+        message = await app_state.message_repo.get_by_id(
+            id_=message_body.reply_to_message_id
+        )
+        if not message or message.chat_id != chat.id:
+            logger.error(
+                "Cannot reply to this message. "
+                "provided_message_id=%s, found_message=%s, user_id=%s",
+                message_body.reply_to_message_id,
+                message,
+                sender_user_id,
+            )
+            await sio.emit_error_event(
+                to_sid=sid,
+                status=SocketioErrorStatusEnum.invalid_data,
+                event_name=SocketioEventsEnum.new_message,
+                error_msg=NewMessageStatusEnum.cannot_reply_this_message,
+                data=message_body.model_dump_json(),
+            )
+            return
+
+    if message_body.forwarded_message_id:
+        message = await app_state.message_repo.get_by_id(
+            id_=message_body.forwarded_message_id
+        )
+        is_in_chat = None
+        if message:
+            chat_participants = (
+                await app_state.chat_repo.get_chat_participant_users(
+                    chat_id=message.chat_id
+                )
+            )
+            is_in_chat = sender_user_id in chat_participants
+        if not message or not is_in_chat:
+            logger.error(
+                "Cannot forward this message. "
+                "provided_message_id=%s, found_message=%s, user_id=%s",
+                message_body.forwarded_message_id,
+                message,
+                sender_user_id,
+            )
+            await sio.emit_error_event(
+                to_sid=sid,
+                status=SocketioErrorStatusEnum.invalid_data,
+                event_name=SocketioEventsEnum.new_message,
+                error_msg=NewMessageStatusEnum.cannot_forward_this_message,
+                data=message_body.model_dump_json(),
+            )
+            return
 
     message_create_model = MessageCreate(
         **message_body.model_dump(exclude={"chat_id"}),
