@@ -80,9 +80,15 @@ async def create_user(user_data: CreateUserData):
 
 
 @router.put("/api/refresh_tokens", response_model=AuthResponse)
-async def update_tokens(session: Session = Depends(check_refresh_token)):
+async def update_tokens(
+    session: Session = Depends(check_refresh_token),
+    device_fingerprint: str = Header(alias="Fingerprint-ID"),
+):
     new_session = await app_state.session_repo.create(
-        user_id=session.user_id, ip=session.ip, user_agent=session.user_agent
+        user_id=session.user_id,
+        ip=session.ip,
+        user_agent=session.user_agent,
+        device_fingerprint=device_fingerprint,
     )
     await app_state.session_repo.delete_session(session_id=session.id)
 
