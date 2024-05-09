@@ -8,7 +8,6 @@ class User(BaseModel):
     public_id: str
     password: str
     email: str
-    user_salt: str
     first_name: str
     last_name: str | None
     avatar_photo_id: UUID4 | None
