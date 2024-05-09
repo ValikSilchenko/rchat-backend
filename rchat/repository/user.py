@@ -74,7 +74,7 @@ class UserRepository:
         user_id = uuid.uuid5(uuid.NAMESPACE_DNS, public_id)
 
         encrypted_password = hashpw(
-            password=password.encode(), salt=gensalt(rounds=14)
+            password=password.encode(), salt=gensalt()
         ).decode("utf-8")
         sql = """
             insert into "user" (
