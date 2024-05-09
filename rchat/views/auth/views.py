@@ -1,6 +1,6 @@
 import logging
-from hashlib import sha256
 
+from bcrypt import checkpw
 from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.openapi.models import Response
 from starlette import status
@@ -37,10 +37,10 @@ async def auth(
         logger.error("User not found. login=%s", body.login)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
-    encrypted_password = sha256(
-        string=(body.password + user.user_salt).encode()
-    ).hexdigest()
-    if encrypted_password != user.password:
+    if not checkpw(
+        password=body.password.encode(),
+        hashed_password=user.password.encode(),
+    ):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     client_ip = None
