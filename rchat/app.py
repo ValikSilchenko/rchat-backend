@@ -5,7 +5,6 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
 
-import rchat.clients.socketio_client as sio_client
 from rchat import migration_runner
 from rchat.conf import ENVIRONMENT, RELOAD_ENABLED
 from rchat.exceptions import register_exception_handlers
@@ -13,10 +12,7 @@ from rchat.helpers import create_storage_folders
 from rchat.log import setup_logging
 from rchat.middlewares import access_log_middleware
 from rchat.state import app_state
-from rchat.views.auth.views import router as auth_router
-from rchat.views.chat.views import router as chat_router
-from rchat.views.message.views import router as message_router
-from rchat.views.user.views import router as user_router
+from rchat.views import include_routers_and_sio
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -35,15 +31,10 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-app.include_router(auth_router)
-app.include_router(chat_router)
-app.include_router(message_router)
-app.include_router(user_router)
-
+include_routers_and_sio(app)
 register_exception_handlers(app)
 app.middleware("http")(access_log_middleware)
 
-app.mount(path="/", app=sio_client.asio_app)
 
 if __name__ == "__main__":
     uvicorn.run(
