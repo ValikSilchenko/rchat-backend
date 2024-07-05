@@ -1,9 +1,8 @@
 import uuid
-from hashlib import sha256
-from secrets import token_hex
 from typing import Optional
 
 from asyncpg import Pool
+from bcrypt import gensalt, hashpw
 from pydantic import UUID3, UUID4, UUID5
 
 from rchat.schemas.user import User, UserFind
@@ -73,20 +72,18 @@ class UserRepository:
         или None при попытке создания пользователя с существующим public_id
         """
         user_id = uuid.uuid5(uuid.NAMESPACE_DNS, public_id)
-        user_salt = token_hex(16)
 
-        encrypted_password = sha256(
-            string=(password + user_salt).encode()
-        ).hexdigest()
+        encrypted_password = hashpw(
+            password=password.encode(), salt=gensalt()
+        ).decode("utf-8")
         sql = """
             insert into "user" (
                 "id",
                 "first_name",
                 "public_id",
                 "password",
-                "email",
-                "user_salt"
-            ) values ($1, $2, $3, $4, $5, $6)
+                "email"
+            ) values ($1, $2, $3, $4, $5)
             on conflict do nothing
             returning *
         """
@@ -98,7 +95,6 @@ class UserRepository:
                 public_id,
                 encrypted_password,
                 email,
-                user_salt,
             )
 
         if not row:
