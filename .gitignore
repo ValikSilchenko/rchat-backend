@@ -3,3 +3,4 @@ pgdata
 storage
 venv
 deployments/dev.env
+*/__pycache__
