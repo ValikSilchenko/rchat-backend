@@ -9,6 +9,4 @@ RUN pip install -r requirements.txt && rm requirements.txt
 
 COPY /rchat /app/rchat
 
-USER rchat-app
-
 CMD ["python", "-m", "rchat.app"]

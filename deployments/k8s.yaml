@@ -15,7 +15,8 @@ spec:
     spec:
         containers:
           - name: app
-            image: valintos/rsisos:rchat-app-v1.1
+            image: valintos/rsisos:rchat-app-v1
+            imagePullPolicy: Always
             ports:
               - containerPort: 8080
                 protocol: TCP
