@@ -2,8 +2,8 @@ import logging
 
 from bcrypt import checkpw
 from fastapi import APIRouter, Depends, Header, HTTPException
-from fastapi.openapi.models import Response
 from starlette import status
+from starlette.responses import Response
 
 from rchat.schemas.session import Session
 from rchat.state import app_state
