@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rchat-app
+  namespace: 0303-silchenko-valentin
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: rchat-app
+  template:
+    metadata:
+      labels:
+        app: rchat-app
+    spec:
+        containers:
+          - name: app
+            image: valintos/rsisos:rchat-app-v1.1
+            ports:
+              - containerPort: 8080
+                protocol: TCP
+            volumeMounts:
+              - name: app-storage-vol
+                mountPath: /app/storage
+            env:
+              - name: RCHAT_ENVIRONMENT
+                value: dev
+              - name: RCHAT_SECRET_KEY
+                value: 10d4f2d93aed29b7be09a2bb0fe1109ede2a602505935063e3b423c272673eacf027d4bc329
+              - name: RCHAT_DB_USERNAME
+                value: rchat
+              - name: RCHAT_DB_PASSWORD
+                value: postgres_rchat
+              - name: RCHAT_DB_NAME
+                value: test_db
+              - name: RCHAT_DB_HOST
+                value: "postgres"
+              - name: RCHAT_SESSION_LIFETIME_MIN
+                value: "30"
+              - name: RCHAT_REFRESH_LIFETIME_DAYS
+                value: "30"
+              - name: RCHAT_STORAGE_DIR
+                value: /app/storage
+        volumes:
+          - name: app-storage-vol
+            emptyDir:
+              sizeLimit: 500Mi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: 0303-silchenko-valentin
+spec:
+  selector:
+    matchLabels:
+      app: postgres-db
+  serviceName: postgres
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgres-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_DB
+              value: test_db
+            - name: POSTGRES_USER
+              value: rchat
+            - name: POSTGRES_PASSWORD
+              value: postgres_rchat
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: db
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: db
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: 0303-silchenko-valentin
+spec:
+  selector:
+    app: postgres-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+  type: ClusterIP
