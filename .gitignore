@@ -4,3 +4,4 @@ storage
 venv
 deployments/dev.env
 */__pycache__
+deployments/k8s-secret.yaml

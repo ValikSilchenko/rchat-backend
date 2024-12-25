@@ -26,13 +26,25 @@ spec:
               - name: RCHAT_ENVIRONMENT
                 value: dev
               - name: RCHAT_SECRET_KEY
-                value: 10d4f2d93aed29b7be09a2bb0fe1109ede2a602505935063e3b423c272673eacf027d4bc329
+                valueFrom:
+                  secretKeyRef:
+                    name: db-secret
+                    key: RCHAT_SECRET_KEY
               - name: RCHAT_DB_USERNAME
-                value: rchat
+                valueFrom:
+                  secretKeyRef:
+                    name: db-secret
+                    key: RCHAT_DB_USERNAME
               - name: RCHAT_DB_PASSWORD
-                value: postgres_rchat
+                valueFrom:
+                  secretKeyRef:
+                    name: db-secret
+                    key: RCHAT_DB_PASSWORD
               - name: RCHAT_DB_NAME
-                value: test_db
+                valueFrom:
+                  secretKeyRef:
+                    name: db-secret
+                    key: RCHAT_DB_NAME
               - name: RCHAT_DB_HOST
                 value: postgres.0303-silchenko-valentin.svc.cluster.local
               - name: RCHAT_SESSION_LIFETIME_MIN
