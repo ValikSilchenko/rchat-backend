@@ -34,7 +34,7 @@ spec:
               - name: RCHAT_DB_NAME
                 value: test_db
               - name: RCHAT_DB_HOST
-                value: "postgres"
+                value: postgres.0303-silchenko-valentin.svc.cluster.local
               - name: RCHAT_SESSION_LIFETIME_MIN
                 value: "30"
               - name: RCHAT_REFRESH_LIFETIME_DAYS
